@@ -1,6 +1,7 @@
 <?php
 // public/dashboard.php
 // The dashboard is now a static shell that fetches data via AJAX
+$result = false;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -27,13 +28,13 @@
             </div>
         </div>
         <div class="header-right">
+            <a href="add_officer.php" id="addOfficerButton" class="btn btn-add-officer">
+                <i class="fas fa-user-plus"></i> ADD OFFICER
+            </a>
             <a href="Bulkbrintmode.php" class="btn btn-warning"><i class="fas fa-print"></i> BULK PRINT MODE</a>
-            <form action="import.php" method="POST" enctype="multipart/form-data" id="importForm" style="display: inline;">
-                <input type="file" name="csv_file" id="csv_file" accept=".csv" style="display: none;" onchange="document.getElementById('importForm').submit();">
-                <button type="button" class="btn btn-outline-light" onclick="document.getElementById('csv_file').click();">
-                    <i class="fas fa-file-excel"></i> BATCH IMPORT (CSV)
-                </button>
-            </form>
+            <a href="batch_import.php" class="btn btn-outline-light">
+                <i class="fas fa-file-excel"></i> BATCH IMPORT
+            </a>
         </div>
     </header>
 
@@ -86,28 +87,24 @@
                         
                         <div class="details-grid">
                             <div class="detail-item">
-                                <label>FULL NAME</label>
-                                <p id="dispName"></p>
+                                <label for="dispName">FULL NAME</label>
+                                <input type="text" id="dispName" name="full_name" class="form-control editable-field" maxlength="255" required>
                             </div>
                             <div class="detail-item">
-                                <label>NIC NUMBER</label>
-                                <p id="dispNicValue"></p>
+                                <label for="dispNicValue">NIC NUMBER</label>
+                                <input type="text" id="dispNicValue" name="nic" class="form-control editable-field" maxlength="30" required>
                             </div>
                             <div class="detail-item">
-                                <label>CATEGORY</label>
-                                <p id="dispCategory"></p>
-                            </div>
-                            <div class="detail-item">
-                                <label>PROVINCE</label>
-                                <p id="dispProvince"></p>
+                                <label for="dispProvince">PROVINCE</label>
+                                <input type="text" id="dispProvince" name="province" class="form-control editable-field" maxlength="100">
                             </div>
                             <div class="detail-item full-width">
-                                <label>DESIGNATION</label>
-                                <p id="dispDesignation"></p>
+                                <label for="dispDesignation">DESIGNATION</label>
+                                <input type="text" id="dispDesignation" name="designation" class="form-control editable-field" maxlength="100">
                             </div>
                             <div class="detail-item full-width">
-                                <label>REGISTERED ADDRESS</label>
-                                <p id="dispAddress"></p>
+                                <label for="dispAddress">REGISTERED ADDRESS</label>
+                                <textarea id="dispAddress" name="address" class="form-control editable-field" rows="2"></textarea>
                             </div>
                         </div>
                         
@@ -127,7 +124,7 @@
                         </div>
                         
                         <div class="actions-row mt-4" style="text-align: right;">
-                            <button type="submit" class="btn btn-primary" style="border-radius: 20px; padding: 10px 30px;"><i class="fas fa-print"></i> GENERATE ID CARD</button>
+                            <button type="submit" id="saveOfficerButton" class="btn btn-primary" style="border-radius: 20px; padding: 10px 30px;"><i class="fas fa-save"></i> SAVE CHANGES &amp; GENERATE ID CARD</button>
                         </div>
                     </form>
                 </div>
@@ -167,36 +164,30 @@
                         
                         document.getElementById('officerId').value = o.id;
                         document.getElementById('hdrNic').innerText = o.NIC;
-                        document.getElementById('dispName').innerText = o.NAME;
+                        document.getElementById('dispName').value = o.NAME;
                         
                         const nameParts = o.NAME.split(' ');
                         document.getElementById('dispShortName').innerText = nameParts[nameParts.length - 1];
                         
-                        document.getElementById('dispNicValue').innerText = o.NIC;
-                        document.getElementById('dispCategory').innerText = o.category;
-                        document.getElementById('dispProvince').innerText = o.province;
-                        document.getElementById('dispDesignation').innerText = o.designation;
-                        document.getElementById('dispAddress').innerText = o.ADD;
+                        document.getElementById('dispNicValue').value = o.NIC;
+                        document.getElementById('dispProvince').value = o.province;
+                        document.getElementById('dispDesignation').value = o.designation;
+                        document.getElementById('dispAddress').value = o.ADD;
                         
                         document.getElementById('dispIssueDate').value = o.issue_date;
                         document.getElementById('dispExpiryDate').value = o.expiry_date;
                         document.getElementById('dispStatus').innerText = o.status || 'Active';
                         
-                        const photoFile = extractFilename(o.photo);
                         const photoEl = document.getElementById('dispPhoto');
-                        if (photoFile) {
-                            photoEl.src = `../photos/${photoFile}`;
-                            photoEl.style.display = 'block';
-                            document.getElementById('dispPhotoFallback').style.display = 'none';
-                        } else {
-                            photoEl.style.display = 'none';
-                            document.getElementById('dispPhotoFallback').style.display = 'inline-block';
-                        }
+                        photoEl.src = o.photo_url;
+                        photoEl.style.display = 'block';
+                        document.getElementById('dispPhotoFallback').style.display = 'none';
                         
                         // Automatically show and populate the ID Card Preview
                         document.getElementById('id-card-preview').style.display = 'block';
                         document.getElementById('cardName').innerText = nameParts[nameParts.length - 1];
                         document.getElementById('cardNic').innerText = o.NIC;
+                        document.getElementById('cardOfficerId').innerText = o.officer_id;
                         
                         // Format dates to DD.MM.YYYY
                         let issueD = o.issue_date || '';
@@ -206,11 +197,15 @@
                         
                         document.getElementById('cardIssueDate').innerText = issueD;
                         document.getElementById('cardExpiryDate').innerText = expiryD;
-                        document.getElementById('cardPhoto').src = photoFile ? `../photos/${photoFile}` : '';
+                        const cardPhoto = document.getElementById('cardPhoto');
+                        cardPhoto.style.visibility = 'visible';
+                        cardPhoto.src = o.photo_url;
                         
                         // Populate QR Code
                         const qrProfileUrl = 'https://sltda.gov.lk/inspection?nic=' + encodeURIComponent(o.NIC);
-                        document.getElementById('cardQr').src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=5&data=${encodeURIComponent(qrProfileUrl)}`;
+                        const cardQr = document.getElementById('cardQr');
+                        cardQr.style.visibility = 'visible';
+                        cardQr.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=5&data=${encodeURIComponent(qrProfileUrl)}`;
                         
                     } else {
                         closeResults();
@@ -231,10 +226,20 @@
             const issueDate = document.getElementById('dispIssueDate').value;
             const expiryDate = document.getElementById('dispExpiryDate').value;
 
-            const formData = new FormData();
+            if (expiryDate <= issueDate) {
+                alert('Expiry date must be after the registration date.');
+                return;
+            }
+
+            const formData = new FormData(this);
             formData.append('id', officerId);
             formData.append('issue_date', issueDate);
             formData.append('expiry_date', expiryDate);
+
+            const saveButton = document.getElementById('saveOfficerButton');
+            const originalButtonHtml = saveButton.innerHTML;
+            saveButton.disabled = true;
+            saveButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SAVING...';
 
             fetch('update_officer.php', {
                 method: 'POST',
@@ -243,22 +248,31 @@
             .then(r => r.json())
             .then(data => {
                 if (data.success) {
-                    alert('Record updated and ID generated!');
-                    document.getElementById('dispStatus').innerText = 'Printed';
+                    alert('Officer record updated in the database.');
+
+                    const updatedName = document.getElementById('dispName').value.trim();
+                    const updatedNic = document.getElementById('dispNicValue').value.trim();
+                    const nameParts = updatedName.split(/\s+/);
+                    const shortName = nameParts[nameParts.length - 1];
+                    document.getElementById('hdrNic').innerText = updatedNic;
+                    document.getElementById('dispShortName').innerText = shortName;
+                    document.getElementById('inspection_id').value = updatedNic;
                     
                     // Show preview
                     document.getElementById('id-card-preview').style.display = 'block';
                     
-                    document.getElementById('cardName').innerText = document.getElementById('dispShortName').innerText;
-                    document.getElementById('cardNic').innerText = document.getElementById('dispNicValue').innerText;
+                    document.getElementById('cardName').innerText = shortName;
+                    document.getElementById('cardNic').innerText = updatedNic;
                     
                     document.getElementById('cardIssueDate').innerText = issueDate.split('-').reverse().join('.');
                     document.getElementById('cardExpiryDate').innerText = expiryDate.split('-').reverse().join('.');
                     
+                    document.getElementById('cardPhoto').style.visibility = 'visible';
                     document.getElementById('cardPhoto').src = document.getElementById('dispPhoto').src;
                     
                     // Populate QR Code
-                    const qrProfileUrl2 = 'https://sltda.gov.lk/inspection?nic=' + encodeURIComponent(document.getElementById('dispNicValue').innerText);
+                    const qrProfileUrl2 = 'https://sltda.gov.lk/inspection?nic=' + encodeURIComponent(updatedNic);
+                    document.getElementById('cardQr').style.visibility = 'visible';
                     document.getElementById('cardQr').src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=5&data=${encodeURIComponent(qrProfileUrl2)}`;
                     
                     // Scroll to preview
@@ -270,6 +284,10 @@
             .catch(err => {
                 console.error('Update error:', err);
                 alert('A network error occurred while updating.');
+            })
+            .finally(() => {
+                saveButton.disabled = false;
+                saveButton.innerHTML = originalButtonHtml;
             });
         });
         
