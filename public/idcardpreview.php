@@ -15,10 +15,9 @@
             <div class="template-front-details">
                 <div id="cardName" class="template-card-name"></div>
                 <div id="cardNic" class="template-card-nic"></div>
-                <div id="cardOfficerId" class="template-card-officer-id"></div>
                 <div class="template-card-dates">
-                    <span>Issued: <b id="cardIssueDate"></b></span>
-                    <span>Expires: <b id="cardExpiryDate"></b></span>
+                    <div><span>Issued Date</span><b id="cardIssueDate"></b></div>
+                    <div><span>Expiry Date</span><b id="cardExpiryDate"></b></div>
                 </div>
             </div>
         </div>

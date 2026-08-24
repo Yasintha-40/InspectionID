@@ -516,7 +516,7 @@ textarea.editable-field {
 .template-card-photo {
     position: absolute;
     left: 27.9%;
-    top: 32.27%;
+    top: 33%;
     width: 44.2%;
     height: 23.5%;
     object-fit: cover;
@@ -528,7 +528,8 @@ textarea.editable-field {
     z-index: 2;
     left: 12%;
     right: 12%;
-    top: 65.5%;
+    top: 63.5%;
+    height: 34.5%;
     color: #000;
     text-align: center;
     font-family: Arial, Helvetica, sans-serif;
@@ -536,36 +537,53 @@ textarea.editable-field {
 
 .template-card-name {
     font-size: 16px;
-    font-weight: 800;
+    font-weight: 700;
     line-height: 1.1;
-    text-transform: uppercase;
+    white-space: nowrap;
 }
 
-.template-card-nic,
-.template-card-officer-id {
-    font-size: 12px;
+.template-card-nic {
+    font-size: 16px;
     font-weight: 700;
-    margin-top: 5px;
+    margin-top: 13px;
 }
 
 .template-card-dates {
-    display: flex;
-    justify-content: center;
-    gap: 14px;
-    margin-top: 10px;
-    font-size: 9px;
+    position: absolute;
+    top: 80%;
+    left: 10%;
+    right: 17%;
+    display: grid;
+    gap: 4px;
+    margin: 0;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.template-card-dates div {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    text-align: left;
+}
+
+.template-card-dates b {
+    text-align: right;
+    font-size: 11px;
+    font-weight: 800;
 }
 
 .template-card-qr {
     position: absolute;
     z-index: 2;
-    left: 37.5%;
-    top: 19%;
-    width: 25%;
+    /* Larger, centred scan area for the printed card back. */
+    left: 31%;
+    top: 10%;
+    width: 38%;
     aspect-ratio: 1;
     background: #fff;
     object-fit: contain;
-    padding: 2px;
+    padding: 3px;
 }
 
 .template-preview-actions {

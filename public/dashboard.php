@@ -220,6 +220,7 @@ $result = false;
             return path.split('\\').pop().split('/').pop();
         }
 
+<<<<<<< Updated upstream
         const photoUploadInput = document.getElementById('photoUploadInput');
         const profilePhotoUpload = document.getElementById('profilePhotoUpload');
         const photoUploadProgress = document.getElementById('photoUploadProgress');
@@ -294,6 +295,18 @@ $result = false;
                     photoUploadInput.value = '';
                 });
         });
+=======
+        function setCardName(fullName) {
+            const cardName = document.getElementById('cardName');
+            cardName.innerText = fullName || '';
+            let fontSize = 16;
+            cardName.style.fontSize = `${fontSize}px`;
+            while (cardName.scrollWidth > cardName.clientWidth && fontSize > 9) {
+                fontSize -= 0.5;
+                cardName.style.fontSize = `${fontSize}px`;
+            }
+        }
+>>>>>>> Stashed changes
 
         document.getElementById('searchForm').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -348,9 +361,8 @@ $result = false;
                         
                         // Automatically show and populate the ID Card Preview
                         document.getElementById('id-card-preview').style.display = 'block';
-                        document.getElementById('cardName').innerText = nameParts[nameParts.length - 1];
+                        setCardName(o.NAME);
                         document.getElementById('cardNic').innerText = o.NIC;
-                        document.getElementById('cardOfficerId').innerText = o.officer_id;
                         
                         // Format dates to DD.MM.YYYY
                         let issueD = o.issue_date || '';
@@ -450,7 +462,7 @@ $result = false;
                     // Show preview
                     document.getElementById('id-card-preview').style.display = 'block';
                     
-                    document.getElementById('cardName').innerText = shortName;
+                    setCardName(updatedName);
                     document.getElementById('cardNic').innerText = updatedNic;
                     
                     document.getElementById('cardIssueDate').innerText = issueDate.split('-').reverse().join('.');
