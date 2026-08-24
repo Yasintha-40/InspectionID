@@ -1,8 +1,9 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/app_settings.php';
 header('Content-Type: application/json; charset=utf-8');
 
-const OFFICER_QR_DIRECTORY = 'D:\\PHOTOS\\QR';
+define('OFFICER_QR_DIRECTORY', local_path('qr_directory'));
 
 function respond(array $data, int $status = 200): void
 {

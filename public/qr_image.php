@@ -1,7 +1,8 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/app_settings.php';
 
-const OFFICER_QR_DIRECTORY = 'D:\\PHOTOS\\QR';
+define('OFFICER_QR_DIRECTORY', local_path('qr_directory'));
 
 $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 if (!$id) { http_response_code(400); exit; }

@@ -113,6 +113,20 @@ body {
     border-color: var(--white);
 }
 
+.btn-settings {
+    width: 44px;
+    padding: 0;
+    justify-content: center;
+    color: var(--white);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 50%;
+    text-decoration: none;
+}
+
+.btn-settings span { display: none; }
+.btn-settings:hover { background: rgba(255, 255, 255, 0.18); border-color: var(--white); }
+
 .btn-primary {
     background-color: var(--primary-blue);
     color: var(--white);
@@ -359,6 +373,41 @@ body {
     color: #1e293b;
     margin: 0;
 }
+.form-control.is-invalid { border-color:#c33b4a; box-shadow:0 0 0 3px rgba(195,59,74,.1); }
+.field-error { min-height:18px; margin-top:6px; display:block; color:#b42334; font-size:11px; font-weight:600; }
+
+.visually-hidden { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; clip: rect(0, 0, 0, 0) !important; white-space: nowrap !important; border: 0 !important; }
+.profile-photo-upload { position: relative; cursor: pointer; }
+.photo-upload-overlay { position: absolute; inset: auto 0 0; min-height: 82px; padding: 12px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; color:#fff; background:linear-gradient(transparent,rgba(15,23,42,.88)); opacity:0; transform:translateY(8px); transition:opacity .2s ease,transform .2s ease; }
+.photo-upload-overlay i { font-size:18px; margin-bottom:2px; }
+.photo-upload-overlay b { font-size:12px; }
+.photo-upload-overlay small { font-size:9px; color:rgba(255,255,255,.82); }
+.profile-photo-upload:hover .photo-upload-overlay,.profile-photo-upload:focus-visible .photo-upload-overlay { opacity:1; transform:translateY(0); }
+.profile-photo-upload:focus-visible { outline:3px solid rgba(36,71,132,.35); outline-offset:3px; }
+.photo-upload-progress { position:absolute; inset:0; z-index:3; display:flex; align-items:center; justify-content:center; gap:8px; color:#fff; background:rgba(15,23,42,.75); font-size:12px; font-weight:700; }
+.photo-upload-progress[hidden] { display:none; }
+.profile-photo-upload.is-uploading { pointer-events:none; }
+.photo-upload-message { min-height:18px; margin-top:-10px; font-size:11px; line-height:1.4; }
+.photo-upload-message.success { color:#16845b; }
+.photo-upload-message.error { color:#b42334; }
+
+.notification-region { position:fixed; z-index:1000; top:18px; right:18px; width:min(390px,calc(100% - 28px)); display:grid; gap:10px; pointer-events:none; }
+.system-notification { position:relative; min-height:78px; padding:15px 42px 15px 16px; display:grid; grid-template-columns:32px 1fr; gap:11px; align-items:start; overflow:hidden; color:#18243b; background:rgba(255,255,255,.98); border:1px solid #dfe6f0; border-left:4px solid #2b65b1; border-radius:12px; box-shadow:0 16px 45px rgba(15,23,42,.2); opacity:0; transform:translateX(24px) scale(.98); transition:opacity .2s ease,transform .2s ease; pointer-events:auto; }
+.system-notification.is-visible { opacity:1; transform:none; }
+.system-notification.success { border-left-color:#16845b; }
+.system-notification.error { border-left-color:#c33b4a; }
+.system-notification.warning { border-left-color:#d58a13; }
+.notification-icon { width:32px; height:32px; display:grid; place-items:center; color:#2b65b1; background:#eaf2ff; border-radius:50%; }
+.success .notification-icon { color:#16845b; background:#e7f8ef; }
+.error .notification-icon { color:#c33b4a; background:#fdecef; }
+.warning .notification-icon { color:#a86408; background:#fff3d8; }
+.system-notification strong { display:block; margin:1px 0 3px; font-size:13px; }
+.system-notification p { margin:0; color:#60708d; font-size:11px; line-height:1.45; }
+.notification-close { position:absolute; top:9px; right:9px; width:30px; min-height:30px; padding:0; display:grid; place-items:center; color:#718097; background:transparent; border:0; border-radius:7px; cursor:pointer; }
+.notification-close:hover { background:#f1f4f8; }
+.notification-timer { position:absolute; left:0; bottom:0; height:3px; width:100%; background:currentColor; opacity:.45; transform-origin:left; animation:notification-countdown linear forwards; }
+@keyframes notification-countdown { to { transform:scaleX(0); } }
+@media (prefers-reduced-motion:reduce) { .system-notification,.notification-timer { transition:none; animation:none; } }
 
 .editable-field {
     width: 100%;
@@ -630,6 +679,7 @@ button, .btn { min-height: 44px; }
     .profile-photo { grid-row: 1 / span 3; width: 120px; height: 150px; margin: 0; }
     .profile-name-short { margin: 0; }
     .profile-sidebar .btn-block { width: max-content; max-width: 100%; }
+    .photo-upload-message { grid-column:2; margin:0; }
 }
 
 @media (max-width: 760px) {
@@ -639,14 +689,16 @@ button, .btn { min-height: 44px; }
 }
 
 @media (max-width: 600px) {
-    .main-header { padding: 16px; gap: 16px; }
+    .main-header { position: relative; padding: 16px; gap: 16px; }
+    .header-left { padding-right: 46px; }
     .logo-circle { width: 40px; height: 40px; flex: 0 0 40px; }
     .header-left { align-items: flex-start; gap: 12px; }
     .header-titles h1 { font-size: .95rem; line-height: 1.35; }
     .header-titles p { font-size: .75rem; }
     .header-right { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .header-right .btn { justify-content: center; padding: 9px 10px; font-size: .72rem; }
-    .header-right .btn:last-child { grid-column: 1 / -1; }
+    .header-right .btn:nth-child(3) { grid-column: 1 / -1; }
+    .header-right .btn-settings { position: absolute; top: 14px; right: 14px; width: 42px; border-radius: 50%; }
     .main-content, .main-content.has-results { width: 100%; margin: 20px auto 40px; padding: 0 12px; }
     .search-card, .main-content.has-results .search-card { padding: 24px 16px; border-radius: 10px; }
     .search-header { margin-bottom: 24px; }
@@ -660,6 +712,10 @@ button, .btn { min-height: 44px; }
     .results-body { padding: 18px 16px; gap: 24px; }
     .profile-sidebar { grid-template-columns: 88px 1fr; column-gap: 14px; }
     .profile-photo { width: 88px; height: 110px; border-radius: 9px; }
+    .photo-upload-overlay { min-height:52px; padding:7px; opacity:1; transform:none; }
+    .photo-upload-overlay i { font-size:14px; }
+    .photo-upload-overlay b { font-size:10px; }
+    .photo-upload-overlay small { display:none; }
     .profile-name-short { font-size: 17px; overflow-wrap: anywhere; }
     .profile-sidebar .btn-block { font-size: 12px; padding-inline: 12px; }
     .details-grid, .dates-grid { grid-template-columns: 1fr; gap: 16px; }
@@ -670,4 +726,6 @@ button, .btn { min-height: 44px; }
     .preview-header h2 { font-size: 20px; }
     .template-cards-container { gap: 20px; }
     .template-download-button { width: 100%; justify-content: center; }
+    .notification-region { top:10px; right:10px; width:calc(100% - 20px); }
+    .system-notification { min-height:72px; }
 }

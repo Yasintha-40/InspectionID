@@ -31,8 +31,9 @@ $expiryDate = trim((string) ($_POST['expiry_date'] ?? ''));
 
 if ($fullName === '' || $nic === '') respond(['success' => false, 'message' => 'Full name and NIC number are required.'], 422);
 if (mb_strlen($fullName) > 255 || mb_strlen($nic) > 30) respond(['success' => false, 'message' => 'One or more values exceed the allowed length.'], 422);
-if (!preg_match('/^[A-Z0-9]+$/', $nic)) respond(['success' => false, 'message' => 'NIC may contain only letters and numbers.'], 422);
+if (!preg_match('/^(?:\d{9}[VX]|\d{12})$/', $nic)) respond(['success' => false, 'message' => 'Enter a valid 12-digit NIC or an old NIC ending in V or X.'], 422);
 if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) respond(['success' => false, 'message' => 'Enter a valid email address.'], 422);
+if ($phone !== '' && !preg_match('/^[0-9+()\-\s]{7,30}$/', $phone)) respond(['success' => false, 'message' => 'Enter a valid phone number.'], 422);
 if (!in_array($status, ['Active', 'Inactive', 'Expired', 'Suspended'], true)) respond(['success' => false, 'message' => 'Select a valid status.'], 422);
 if (($issueDate === '') !== ($expiryDate === '')) respond(['success' => false, 'message' => 'Provide both registration and expiry dates, or leave both empty.'], 422);
 if ($issueDate !== '' && (!valid_date($issueDate) || !valid_date($expiryDate) || $expiryDate <= $issueDate)) respond(['success' => false, 'message' => 'Expiry date must be after the registration date.'], 422);

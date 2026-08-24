@@ -35,6 +35,10 @@ $result = false;
             <a href="batch_import.php" class="btn btn-outline-light">
                 <i class="fas fa-file-excel"></i> BATCH IMPORT
             </a>
+            <a href="settings.php" class="btn btn-settings" aria-label="System settings" title="System settings">
+                <i class="fas fa-gear" aria-hidden="true"></i>
+                <span>SETTINGS</span>
+            </a>
         </div>
     </header>
 
@@ -54,9 +58,10 @@ $result = false;
                 <div class="form-group">
                     <label for="inspection_id">NATIONAL IDENTITY CARD (NIC) NUMBER</label>
                     <div class="input-group">
-                        <input type="text" name="inspection_id" id="inspection_id" class="form-control" placeholder="e.g. 199881900934 or 560091907V" required>
+                        <input type="text" name="inspection_id" id="inspection_id" class="form-control" placeholder="e.g. 199881900934 or 560091907V" required aria-describedby="inspectionIdError" autocomplete="off">
                         <button type="submit" class="btn btn-primary">FIND</button>
                     </div>
+                    <small class="field-error" id="inspectionIdError" aria-live="polite"></small>
                 </div>
             </form>
             
@@ -72,10 +77,14 @@ $result = false;
             
             <div class="results-body">
                 <div class="profile-sidebar">
-                    <div class="profile-photo">
-                        <img id="dispPhoto" src="" alt="Profile Photo" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
-                        <i class="fas fa-user" id="dispPhotoFallback" style="display: none; font-size: 5rem; color: white;"></i>
-                    </div>
+                    <label class="profile-photo profile-photo-upload" id="profilePhotoUpload" for="photoUploadInput" tabindex="0" role="button" aria-label="Change officer photo">
+                        <img id="dispPhoto" src="" alt="Officer profile photo" onerror="this.style.display='none'; document.getElementById('dispPhotoFallback').style.display='inline-block';">
+                        <i class="fas fa-user" id="dispPhotoFallback" style="display: none; font-size: 5rem; color: white;" aria-hidden="true"></i>
+                        <span class="photo-upload-overlay"><i class="fas fa-camera" aria-hidden="true"></i><b>Change photo</b><small>JPG, PNG or WebP · max 5 MB</small></span>
+                        <span class="photo-upload-progress" id="photoUploadProgress" hidden><i class="fas fa-spinner fa-spin" aria-hidden="true"></i> Uploading...</span>
+                    </label>
+                    <input id="photoUploadInput" class="visually-hidden" type="file" accept="image/jpeg,image/png,image/webp">
+                    <div id="photoUploadMessage" class="photo-upload-message" role="status" aria-live="polite"></div>
                     <h3 class="profile-name-short" id="dispShortName"></h3>
                     <span class="status-badge printed" id="dispStatus">PRINTED</span>
                     <button class="btn btn-outline-dark btn-block mt-3"><i class="fas fa-qrcode"></i> ONLINE PROFILE</button>
@@ -149,7 +158,57 @@ $result = false;
         
     </main>
 
+    <div class="notification-region" id="notificationRegion" aria-live="polite" aria-atomic="false"></div>
+
     <script>
+        const notificationRegion = document.getElementById('notificationRegion');
+
+        function notify(type, title, message, duration = 4500) {
+            const icons = { success: 'fa-circle-check', error: 'fa-circle-exclamation', warning: 'fa-triangle-exclamation', info: 'fa-circle-info' };
+            const notification = document.createElement('div');
+            notification.className = `system-notification ${type}`;
+            notification.setAttribute('role', type === 'error' ? 'alert' : 'status');
+
+            const icon = document.createElement('i');
+            icon.className = `fas ${icons[type] || icons.info} notification-icon`;
+            icon.setAttribute('aria-hidden', 'true');
+            const copy = document.createElement('div');
+            const heading = document.createElement('strong');
+            heading.textContent = title;
+            const body = document.createElement('p');
+            body.textContent = message;
+            copy.append(heading, body);
+            const close = document.createElement('button');
+            close.type = 'button';
+            close.className = 'notification-close';
+            close.setAttribute('aria-label', 'Dismiss notification');
+            close.innerHTML = '<i class="fas fa-times" aria-hidden="true"></i>';
+            const progress = document.createElement('span');
+            progress.className = 'notification-timer';
+            progress.style.animationDuration = `${duration}ms`;
+            notification.append(icon, copy, close, progress);
+            notificationRegion.append(notification);
+
+            requestAnimationFrame(() => notification.classList.add('is-visible'));
+            const dismiss = () => {
+                notification.classList.remove('is-visible');
+                window.setTimeout(() => notification.remove(), 220);
+            };
+            close.addEventListener('click', dismiss);
+            window.setTimeout(dismiss, duration);
+        }
+
+        function setFieldError(input, message) {
+            const error = document.getElementById(input.getAttribute('aria-describedby'));
+            input.classList.toggle('is-invalid', Boolean(message));
+            input.setAttribute('aria-invalid', message ? 'true' : 'false');
+            if (error) error.textContent = message;
+        }
+
+        function isValidNic(value) {
+            return /^(?:\d{9}[VX]|\d{12})$/i.test(value.replace(/[\s-]+/g, ''));
+        }
+
         function closeResults() {
             document.getElementById('resultsPanel').style.display = 'none';
             document.getElementById('id-card-preview').style.display = 'none';
@@ -161,11 +220,95 @@ $result = false;
             return path.split('\\').pop().split('/').pop();
         }
 
+        const photoUploadInput = document.getElementById('photoUploadInput');
+        const profilePhotoUpload = document.getElementById('profilePhotoUpload');
+        const photoUploadProgress = document.getElementById('photoUploadProgress');
+        const photoUploadMessage = document.getElementById('photoUploadMessage');
+
+        profilePhotoUpload.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                photoUploadInput.click();
+            }
+        });
+
+        photoUploadInput.addEventListener('change', function() {
+            const file = this.files && this.files[0];
+            if (!file) return;
+
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+            if (!allowedTypes.includes(file.type) || file.size > 5 * 1024 * 1024) {
+                photoUploadMessage.className = 'photo-upload-message error';
+                photoUploadMessage.textContent = 'Choose a JPG, PNG or WebP image up to 5 MB.';
+                notify('error', 'Photo not accepted', 'Choose a JPG, PNG or WebP image up to 5 MB.');
+                this.value = '';
+                return;
+            }
+
+            const officerId = document.getElementById('officerId').value;
+            if (!officerId) {
+                photoUploadMessage.className = 'photo-upload-message error';
+                photoUploadMessage.textContent = 'Search for an officer before changing the photo.';
+                notify('warning', 'No officer selected', 'Search for an officer before changing the photo.');
+                this.value = '';
+                return;
+            }
+
+            const currentPhoto = document.getElementById('dispPhoto');
+            const previousSrc = currentPhoto.src;
+            const previewUrl = URL.createObjectURL(file);
+            currentPhoto.src = previewUrl;
+            currentPhoto.style.display = 'block';
+            document.getElementById('dispPhotoFallback').style.display = 'none';
+            profilePhotoUpload.classList.add('is-uploading');
+            photoUploadProgress.hidden = false;
+            photoUploadMessage.textContent = '';
+
+            const formData = new FormData();
+            formData.append('id', officerId);
+            formData.append('image', file);
+
+            fetch('update_photo.php', { method: 'POST', body: formData })
+                .then(response => response.json().then(data => ({ response, data })))
+                .then(({ response, data }) => {
+                    if (!response.ok || !data.success) throw new Error(data.message || 'Photo upload failed.');
+                    const savedPhotoUrl = `${data.photo_url}${data.photo_url.includes('?') ? '&' : '?'}v=${Date.now()}`;
+                    currentPhoto.src = savedPhotoUrl;
+                    const cardPhoto = document.getElementById('cardPhoto');
+                    cardPhoto.src = savedPhotoUrl;
+                    cardPhoto.style.visibility = 'visible';
+                    photoUploadMessage.className = 'photo-upload-message success';
+                    photoUploadMessage.textContent = 'Photo updated successfully.';
+                    notify('success', 'Photo updated', 'The officer profile and ID-card preview now use the new photo.');
+                })
+                .catch(error => {
+                    currentPhoto.src = previousSrc;
+                    photoUploadMessage.className = 'photo-upload-message error';
+                    photoUploadMessage.textContent = error.message || 'Unable to update the photo.';
+                    notify('error', 'Photo update failed', error.message || 'Unable to update the photo.');
+                })
+                .finally(() => {
+                    URL.revokeObjectURL(previewUrl);
+                    profilePhotoUpload.classList.remove('is-uploading');
+                    photoUploadProgress.hidden = true;
+                    photoUploadInput.value = '';
+                });
+        });
+
         document.getElementById('searchForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            const nic = document.getElementById('inspection_id').value;
+            const nicInput = document.getElementById('inspection_id');
+            const nic = nicInput.value.trim().toUpperCase();
             const messages = document.getElementById('search-results-messages');
             messages.innerHTML = '';
+            if (!isValidNic(nic)) {
+                setFieldError(nicInput, 'Enter a 12-digit NIC or an old NIC with 9 digits followed by V or X.');
+                nicInput.focus();
+                notify('warning', 'Check the NIC number', 'The NIC format is incomplete or invalid.');
+                return;
+            }
+            setFieldError(nicInput, '');
+            nicInput.value = nic.replace(/[\s-]+/g, '');
             
             fetch(`get_officer.php?nic=${encodeURIComponent(nic)}`)
                 .then(r => r.json())
@@ -199,6 +342,9 @@ $result = false;
                         photoEl.src = o.photo_url;
                         photoEl.style.display = 'block';
                         document.getElementById('dispPhotoFallback').style.display = 'none';
+                        photoUploadMessage.textContent = '';
+                        photoUploadMessage.className = 'photo-upload-message';
+                        notify('success', 'Officer found', `${o.NAME} is ready to review and update.`, 3200);
                         
                         // Automatically show and populate the ID Card Preview
                         document.getElementById('id-card-preview').style.display = 'block';
@@ -230,13 +376,19 @@ $result = false;
                     } else {
                         closeResults();
                         messages.innerHTML = `<div class="alert alert-danger" style="margin-top: 15px;">${data.message}</div>`;
+                        notify('error', 'No officer found', data.message || 'No matching officer record was found.');
                     }
                 })
                 .catch(err => {
                     console.error('Fetch error:', err);
                     closeResults();
                     messages.innerHTML = `<div class="alert alert-danger" style="margin-top: 15px;">Network or server error.</div>`;
+                    notify('error', 'Connection problem', 'The officer lookup could not reach the server. Please try again.');
                 });
+        });
+
+        document.getElementById('inspection_id').addEventListener('input', function() {
+            if (this.classList.contains('is-invalid')) setFieldError(this, '');
         });
 
         document.getElementById('updateForm').addEventListener('submit', function(e) {
@@ -246,8 +398,27 @@ $result = false;
             const issueDate = document.getElementById('dispIssueDate').value;
             const expiryDate = document.getElementById('dispExpiryDate').value;
 
+            const fullName = document.getElementById('dispName');
+            const nicField = document.getElementById('dispNicValue');
+            const emailField = document.getElementById('dispEmail');
+            if (!fullName.value.trim()) {
+                fullName.focus();
+                notify('warning', 'Full name required', 'Enter the officer’s full name before saving.');
+                return;
+            }
+            if (!isValidNic(nicField.value)) {
+                nicField.focus();
+                notify('warning', 'Invalid NIC number', 'Use a 12-digit NIC or 9 digits followed by V or X.');
+                return;
+            }
+            if (emailField.value && !emailField.checkValidity()) {
+                emailField.focus();
+                notify('warning', 'Invalid email address', 'Enter a complete email address or leave the field empty.');
+                return;
+            }
             if ((issueDate || expiryDate) && (!issueDate || !expiryDate || expiryDate <= issueDate)) {
-                alert('Provide both dates, with expiry after registration.');
+                document.getElementById(!issueDate ? 'dispIssueDate' : 'dispExpiryDate').focus();
+                notify('warning', 'Check the card dates', 'Provide both dates and make the expiry date later than registration.');
                 return;
             }
 
@@ -302,7 +473,7 @@ $result = false;
                         cardQr.style.visibility = 'visible';
                         cardQr.src = `${result.qr_url}&v=${Date.now()}`;
                         document.getElementById('id-card-preview').scrollIntoView({ behavior: 'smooth' });
-                        alert(`Officer saved and QR code created as ${result.file_name}.`);
+                        notify('success', 'Officer saved', `Changes were saved and ${result.file_name} was generated.`, 5500);
                     });
                 } else {
                     throw new Error(data.message || 'The officer record could not be updated.');
@@ -310,7 +481,7 @@ $result = false;
             })
             .catch(err => {
                 console.error('Update error:', err);
-                alert(err.message || 'A network error occurred while saving or generating the QR code.');
+                notify('error', 'Save failed', err.message || 'A network error occurred while saving or generating the QR code.', 6000);
             })
             .finally(() => {
                 saveButton.disabled = false;

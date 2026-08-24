@@ -1,7 +1,9 @@
 <?php
 
-const AUTO_OFFICER_PHOTO_DIRECTORY = 'D:\\PHOTOS\\id_number';
-const LOCAL_OFFICER_PHOTO_DIRECTORY = 'D:\\PHOTOS';
+require_once __DIR__ . '/app_settings.php';
+
+define('AUTO_OFFICER_PHOTO_DIRECTORY', local_path('photo_directory'));
+const LOCAL_OFFICER_PHOTO_DIRECTORY = DEFAULT_LEGACY_PHOTO_DIRECTORY;
 
 /**
  * Resolve an officer photo without exposing a local filesystem path.
