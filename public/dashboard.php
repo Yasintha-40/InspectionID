@@ -95,12 +95,26 @@ $result = false;
                                 <input type="text" id="dispNicValue" name="nic" class="form-control editable-field" maxlength="30" required>
                             </div>
                             <div class="detail-item">
-                                <label for="dispProvince">PROVINCE</label>
-                                <input type="text" id="dispProvince" name="province" class="form-control editable-field" maxlength="100">
+                                <label for="dispNickname">NICKNAME</label>
+                                <input type="text" id="dispNickname" name="nickname" class="form-control editable-field" maxlength="100">
+                            </div>
+                            <div class="detail-item">
+                                <label for="dispEmail">EMAIL</label>
+                                <input type="email" id="dispEmail" name="email" class="form-control editable-field" maxlength="150">
+                            </div>
+                            <div class="detail-item">
+                                <label for="dispPhone">PHONE</label>
+                                <input type="tel" id="dispPhone" name="phone" class="form-control editable-field" maxlength="30">
                             </div>
                             <div class="detail-item full-width">
                                 <label for="dispDesignation">DESIGNATION</label>
                                 <input type="text" id="dispDesignation" name="designation" class="form-control editable-field" maxlength="100">
+                            </div>
+                            <div class="detail-item">
+                                <label for="dispStatusSelect">STATUS</label>
+                                <select id="dispStatusSelect" name="status" class="form-control editable-field">
+                                    <option>Active</option><option>Inactive</option><option>Expired</option><option>Suspended</option>
+                                </select>
                             </div>
                             <div class="detail-item full-width">
                                 <label for="dispAddress">REGISTERED ADDRESS</label>
@@ -170,8 +184,11 @@ $result = false;
                         document.getElementById('dispShortName').innerText = nameParts[nameParts.length - 1];
                         
                         document.getElementById('dispNicValue').value = o.NIC;
-                        document.getElementById('dispProvince').value = o.province;
+                        document.getElementById('dispNickname').value = o.nickname;
+                        document.getElementById('dispEmail').value = o.email;
+                        document.getElementById('dispPhone').value = o.phone;
                         document.getElementById('dispDesignation').value = o.designation;
+                        document.getElementById('dispStatusSelect').value = o.status || 'Active';
                         document.getElementById('dispAddress').value = o.ADD;
                         
                         document.getElementById('dispIssueDate').value = o.issue_date;
@@ -201,11 +218,14 @@ $result = false;
                         cardPhoto.style.visibility = 'visible';
                         cardPhoto.src = o.photo_url;
                         
-                        // Populate QR Code
-                        const qrProfileUrl = 'https://sltda.gov.lk/inspection?nic=' + encodeURIComponent(o.NIC);
                         const cardQr = document.getElementById('cardQr');
-                        cardQr.style.visibility = 'visible';
-                        cardQr.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=5&data=${encodeURIComponent(qrProfileUrl)}`;
+                        if (o.qr_url) {
+                            cardQr.style.visibility = 'visible';
+                            cardQr.src = `${o.qr_url}&v=${Date.now()}`;
+                        } else {
+                            cardQr.removeAttribute('src');
+                            cardQr.style.visibility = 'hidden';
+                        }
                         
                     } else {
                         closeResults();
@@ -226,8 +246,8 @@ $result = false;
             const issueDate = document.getElementById('dispIssueDate').value;
             const expiryDate = document.getElementById('dispExpiryDate').value;
 
-            if (expiryDate <= issueDate) {
-                alert('Expiry date must be after the registration date.');
+            if ((issueDate || expiryDate) && (!issueDate || !expiryDate || expiryDate <= issueDate)) {
+                alert('Provide both dates, with expiry after registration.');
                 return;
             }
 
@@ -248,8 +268,6 @@ $result = false;
             .then(r => r.json())
             .then(data => {
                 if (data.success) {
-                    alert('Officer record updated in the database.');
-
                     const updatedName = document.getElementById('dispName').value.trim();
                     const updatedNic = document.getElementById('dispNicValue').value.trim();
                     const nameParts = updatedName.split(/\s+/);
@@ -270,20 +288,29 @@ $result = false;
                     document.getElementById('cardPhoto').style.visibility = 'visible';
                     document.getElementById('cardPhoto').src = document.getElementById('dispPhoto').src;
                     
-                    // Populate QR Code
-                    const qrProfileUrl2 = 'https://sltda.gov.lk/inspection?nic=' + encodeURIComponent(updatedNic);
-                    document.getElementById('cardQr').style.visibility = 'visible';
-                    document.getElementById('cardQr').src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=5&data=${encodeURIComponent(qrProfileUrl2)}`;
-                    
-                    // Scroll to preview
-                    document.getElementById('id-card-preview').scrollIntoView({ behavior: 'smooth' });
+                    saveButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> GENERATING QR...';
+                    const qrData = new URLSearchParams({ id: officerId });
+                    return fetch('qr-generator.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+                        body: qrData
+                    })
+                    .then(response => response.json().then(result => ({ response, result })))
+                    .then(({ response, result }) => {
+                        if (!response.ok || !result.success) throw new Error(result.message || 'QR generation failed.');
+                        const cardQr = document.getElementById('cardQr');
+                        cardQr.style.visibility = 'visible';
+                        cardQr.src = `${result.qr_url}&v=${Date.now()}`;
+                        document.getElementById('id-card-preview').scrollIntoView({ behavior: 'smooth' });
+                        alert(`Officer saved and QR code created as ${result.file_name}.`);
+                    });
                 } else {
-                    alert('Error updating record: ' + data.message);
+                    throw new Error(data.message || 'The officer record could not be updated.');
                 }
             })
             .catch(err => {
                 console.error('Update error:', err);
-                alert('A network error occurred while updating.');
+                alert(err.message || 'A network error occurred while saving or generating the QR code.');
             })
             .finally(() => {
                 saveButton.disabled = false;

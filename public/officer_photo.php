@@ -7,7 +7,7 @@ $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 $nic = trim((string) ($_GET['nic'] ?? ''));
 
 if ($id) {
-    $statement = $conn->prepare('SELECT id, officer_id, nic, photo FROM officers WHERE id = ? LIMIT 1');
+    $statement = $conn->prepare('SELECT id, officer_id, nic, photo FROM officers WHERE id = ? AND deleted_at IS NULL LIMIT 1');
     $statement->bind_param('i', $id);
 } elseif ($nic !== '') {
     $cleanNic = strtoupper(preg_replace('/[\s-]+/', '', $nic));

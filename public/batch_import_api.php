@@ -26,9 +26,12 @@ if ($action === 'preview') {
     $seen = []; $records = []; $counts = ['total'=>0,'valid'=>0,'duplicates'=>0,'errors'=>0];
     foreach ($parsed['records'] as $record) {
         $counts['total']++; $record['nic'] = clean_nic($record['nic']); $errors = [];
+        // Keep the officer's database status separate from the preview row status.
+        $record['officer_status'] = trim((string)($record['status'] ?? '')) ?: 'Active';
         if (trim($record['full_name']) === '') $errors[] = 'Name is required';
         if ($record['nic'] === '') $errors[] = 'NIC is required';
         if (!valid_email(trim($record['email']))) $errors[] = 'Invalid email';
+        if (!in_array($record['officer_status'], ['Active','Inactive','Expired','Suspended'], true)) $errors[] = 'Invalid officer status';
         $key = $record['nic']; if ($key && isset($seen[$key])) $errors[] = 'Duplicate NIC in workbook'; $seen[$key] = true;
         $duplicate = false;
         if (!$errors) { $stmt=$conn->prepare("SELECT id FROM officers WHERE nic_normalized=? OR (email<>'' AND LOWER(email)=LOWER(?)) LIMIT 1"); $email=trim($record['email']); $stmt->bind_param('ss',$key,$email); $stmt->execute(); $duplicate=(bool)$stmt->get_result()->fetch_assoc(); }
@@ -52,9 +55,11 @@ if ($action === 'commit') {
             if($record['status']==='error'){ $failed++; continue; }
             $nic=clean_nic($record['nic']); $email=trim($record['email']);
             $find=$conn->prepare("SELECT id FROM officers WHERE nic_normalized=? OR (email<>'' AND LOWER(email)=LOWER(?)) LIMIT 1"); $find->bind_param('ss',$nic,$email); $find->execute(); $existing=$find->get_result()->fetch_assoc();
-            $name=trim($record['full_name']);$address=trim($record['address']);$photo=trim($record['photo']);$qr=trim($record['qr_code']);$category=trim($record['guide_category'])?:'National Guide';$nickname=trim($record['nickname']);$languages=trim($record['languages'])?:'English';
-            if($existing){ if($policy==='skip'){ $skipped++; continue; } $stmt=$conn->prepare('UPDATE officers SET full_name=?,address=?,nic=?,email=?,photo=?,qr_code=?,guide_category=?,nickname=?,languages=? WHERE id=?');$stmt->bind_param('sssssssssi',$name,$address,$nic,$email,$photo,$qr,$category,$nickname,$languages,$existing['id']);$stmt->execute();$updated++; }
-            else { do{$officerId='INS-'.str_pad((string)$next++,4,'0',STR_PAD_LEFT);$check=$conn->prepare('SELECT id FROM officers WHERE officer_id=?');$check->bind_param('s',$officerId);$check->execute();}while($check->get_result()->num_rows);$stmt=$conn->prepare('INSERT INTO officers(officer_id,guide_category,full_name,nickname,languages,address,nic,email,photo,qr_code) VALUES(?,?,?,?,?,?,?,?,?,?)');$stmt->bind_param('ssssssssss',$officerId,$category,$name,$nickname,$languages,$address,$nic,$email,$photo,$qr);$stmt->execute();$inserted++; }
+            $name=trim($record['full_name']);$address=trim($record['address']);$photo=trim($record['photo']);$qr=trim($record['qr_code']);$nickname=trim($record['nickname']);
+            $designation=trim($record['designation']??'')?:'Inspection Officer';$phone=trim($record['phone']??'');$issueDate=trim($record['issue_date']??'');$expiryDate=trim($record['expiry_date']??'');$recordStatus=trim($record['officer_status']??'')?:'Active';
+            if(!in_array($recordStatus,['Active','Inactive','Expired','Suspended'],true)){$failed++;continue;}
+            if($existing){ if($policy==='skip'){ $skipped++; continue; } $stmt=$conn->prepare("UPDATE officers SET full_name=?,address=NULLIF(?,''),nic=?,email=NULLIF(?,''),photo=NULLIF(?,''),qr_code=NULLIF(?,''),nickname=NULLIF(?,''),designation=?,phone=NULLIF(?,''),issue_date=NULLIF(?,''),expiry_date=NULLIF(?,''),status=?,row_version=row_version+1 WHERE id=?");$stmt->bind_param('ssssssssssssi',$name,$address,$nic,$email,$photo,$qr,$nickname,$designation,$phone,$issueDate,$expiryDate,$recordStatus,$existing['id']);$stmt->execute();$updated++; }
+            else { do{$officerId='INS-'.str_pad((string)$next++,4,'0',STR_PAD_LEFT);$check=$conn->prepare('SELECT id FROM officers WHERE officer_id=?');$check->bind_param('s',$officerId);$check->execute();}while($check->get_result()->num_rows);$stmt=$conn->prepare("INSERT INTO officers(officer_id,full_name,nickname,address,nic,email,photo,qr_code,designation,phone,issue_date,expiry_date,status) VALUES(?,?,NULLIF(?,''),NULLIF(?,''),?,NULLIF(?,''),NULLIF(?,''),NULLIF(?,''),?,NULLIF(?,''),NULLIF(?,''),NULLIF(?,''),?)");$stmt->bind_param('sssssssssssss',$officerId,$name,$nickname,$address,$nic,$email,$photo,$qr,$designation,$phone,$issueDate,$expiryDate,$recordStatus);$stmt->execute();$inserted++; }
         }
         $total=count($stage['records']);$job=$conn->prepare("INSERT INTO import_jobs(public_id,original_filename,duplicate_policy,status,total_rows,inserted_rows,updated_rows,skipped_rows,failed_rows,started_at,completed_at) VALUES(UUID(),?,?,'completed',?,?,?,?,?,?,NOW(6),NOW(6))");$job->bind_param('ssiiiii',$stage['filename'],$policy,$total,$inserted,$updated,$skipped,$failed);$job->execute();$jobId=$conn->insert_id;$conn->commit();@unlink($jsonPath);@unlink($xlsxPath);
         respond(['success'=>true,'job_id'=>$jobId,'inserted'=>$inserted,'updated'=>$updated,'skipped'=>$skipped,'failed'=>$failed]);

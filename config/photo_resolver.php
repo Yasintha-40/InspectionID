@@ -12,7 +12,10 @@ function resolve_officer_photo(array $officer): ?string
 {
     $configuredPath = trim((string) ($officer['photo'] ?? ''));
     if ($configuredPath !== '' && is_file($configuredPath)) {
-        return realpath($configuredPath) ?: $configuredPath;
+        $resolvedPath = realpath($configuredPath);
+        if ($resolvedPath !== false && is_path_in_photo_directory($resolvedPath)) {
+            return $resolvedPath;
+        }
     }
 
     $candidateNames = array_filter([
@@ -36,6 +39,21 @@ function resolve_officer_photo(array $officer): ?string
     }
 
     return null;
+}
+
+/** Only serve files located under one of the application-approved photo roots. */
+function is_path_in_photo_directory(string $path): bool
+{
+    $resolvedPath = realpath($path);
+    if ($resolvedPath === false) return false;
+
+    foreach ([AUTO_OFFICER_PHOTO_DIRECTORY, LOCAL_OFFICER_PHOTO_DIRECTORY] as $directory) {
+        $resolvedDirectory = realpath($directory);
+        if ($resolvedDirectory === false) continue;
+        $prefix = rtrim(strtolower($resolvedDirectory), "\\/") . DIRECTORY_SEPARATOR;
+        if (strpos(strtolower($resolvedPath), $prefix) === 0) return true;
+    }
+    return false;
 }
 
 function normalize_photo_identifier($value): string

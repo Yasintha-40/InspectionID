@@ -35,13 +35,13 @@ function updateSelection() {
 function renderRows() {
   if (!state.records.length) {
     $("guideRows").innerHTML =
-      '<tr><td colspan="7" class="table-state"><i class="fa-regular fa-folder-open"></i> No guides match this filter.</td></tr>';
+      '<tr><td colspan="6" class="table-state"><i class="fa-regular fa-folder-open"></i> No guides match this filter.</td></tr>';
     return;
   }
   $("guideRows").innerHTML = state.records
     .map(
       (row) =>
-        `<tr><td class="select-column"><input class="guide-checkbox" type="checkbox" value="${Number(row.id)}" aria-label="Select ${escapeHtml(row.full_name)}"></td><td class="guide-id">${escapeHtml(row.officer_id)}</td><td>${escapeHtml(row.full_name)}</td><td>${escapeHtml(row.nickname)}</td><td>${escapeHtml(row.nic || "—")}</td><td>${escapeHtml(row.languages)}</td><td class="address-cell">${escapeHtml(row.address || "—")}</td></tr>`,
+        `<tr><td class="select-column"><input class="guide-checkbox" type="checkbox" value="${Number(row.id)}" aria-label="Select ${escapeHtml(row.full_name)}"></td><td class="guide-id">${escapeHtml(row.officer_id)}</td><td>${escapeHtml(row.full_name)}</td><td>${escapeHtml(row.nickname)}</td><td>${escapeHtml(row.nic || "—")}</td><td class="address-cell">${escapeHtml(row.address || "—")}</td></tr>`,
     )
     .join("");
   document.querySelectorAll(".guide-checkbox").forEach((input) =>
@@ -65,10 +65,7 @@ async function loadGuides() {
     '<i class="fa-solid fa-circle-notch fa-spin"></i> Loading';
   showMessage();
   try {
-    const query = new URLSearchParams({
-      category: "All Categories",
-      filter: $("typeFilter").value,
-    });
+    const query = new URLSearchParams({ filter: $("typeFilter").value });
     const response = await fetch(`bulk_guides_api.php?${query}`);
     const data = await response.json();
     if (!response.ok || !data.success)
@@ -82,7 +79,7 @@ async function loadGuides() {
   } catch (error) {
     state.records = [];
     $("guideRows").innerHTML =
-      `<tr><td colspan="7" class="table-state error">${escapeHtml(error.message)}</td></tr>`;
+      `<tr><td colspan="6" class="table-state error">${escapeHtml(error.message)}</td></tr>`;
   } finally {
     $("loadGuides").disabled = false;
     $("loadGuides").textContent = "Load Guides";

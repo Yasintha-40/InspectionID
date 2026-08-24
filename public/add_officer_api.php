@@ -21,11 +21,10 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
 $fullName = trim((string) ($_POST['full_name'] ?? ''));
 $nic = strtoupper(preg_replace('/[\s-]+/', '', trim((string) ($_POST['nic'] ?? ''))));
 $email = strtolower(trim((string) ($_POST['email'] ?? '')));
-$category = 'National Guide';
 $nickname = trim((string) ($_POST['nickname'] ?? ''));
-$languages = '';
-$provinceId = filter_var($_POST['province_id'] ?? null, FILTER_VALIDATE_INT);
 $designation = trim((string) ($_POST['designation'] ?? '')) ?: 'Inspection Officer';
+$phone = trim((string) ($_POST['phone'] ?? ''));
+$status = trim((string) ($_POST['status'] ?? 'Active'));
 $address = trim((string) ($_POST['address'] ?? ''));
 $issueDate = trim((string) ($_POST['issue_date'] ?? ''));
 $expiryDate = trim((string) ($_POST['expiry_date'] ?? ''));
@@ -34,18 +33,9 @@ if ($fullName === '' || $nic === '') respond(['success' => false, 'message' => '
 if (mb_strlen($fullName) > 255 || mb_strlen($nic) > 30) respond(['success' => false, 'message' => 'One or more values exceed the allowed length.'], 422);
 if (!preg_match('/^[A-Z0-9]+$/', $nic)) respond(['success' => false, 'message' => 'NIC may contain only letters and numbers.'], 422);
 if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) respond(['success' => false, 'message' => 'Enter a valid email address.'], 422);
+if (!in_array($status, ['Active', 'Inactive', 'Expired', 'Suspended'], true)) respond(['success' => false, 'message' => 'Select a valid status.'], 422);
 if (($issueDate === '') !== ($expiryDate === '')) respond(['success' => false, 'message' => 'Provide both registration and expiry dates, or leave both empty.'], 422);
 if ($issueDate !== '' && (!valid_date($issueDate) || !valid_date($expiryDate) || $expiryDate <= $issueDate)) respond(['success' => false, 'message' => 'Expiry date must be after the registration date.'], 422);
-
-if (!$provinceId) respond(['success' => false, 'message' => 'Select a province.'], 422);
-$provinceStatement = $conn->prepare('SELECT name FROM provinces WHERE id = ? AND is_active = 1 LIMIT 1');
-if (!$provinceStatement) respond(['success' => false, 'message' => 'The province could not be validated.'], 500);
-$provinceStatement->bind_param('i', $provinceId);
-$provinceStatement->execute();
-$provinceRow = $provinceStatement->get_result()->fetch_assoc();
-$provinceStatement->close();
-if (!$provinceRow) respond(['success' => false, 'message' => 'Select a valid province.'], 422);
-$province = $provinceRow['name'];
 
 $duplicate = $conn->prepare("SELECT nic_normalized, email FROM officers WHERE deleted_at IS NULL AND (nic_normalized = ? OR (? <> '' AND LOWER(email) = ?)) LIMIT 1");
 if (!$duplicate) respond(['success' => false, 'message' => 'The officer record could not be validated.'], 500);
@@ -82,10 +72,10 @@ try {
     if (!$nextResult) throw new RuntimeException($conn->error);
     $next = (int) $nextResult->fetch_assoc()['next_id'];
     $officerId = 'INS-' . str_pad((string) $next, 4, '0', STR_PAD_LEFT);
-    $sql = 'INSERT INTO officers (officer_id, guide_category, full_name, nickname, languages, address, nic, email, photo, designation, province, issue_date, expiry_date) VALUES (?, ?, ?, NULLIF(?, \'\'), NULLIF(?, \'\'), NULLIF(?, \'\'), ?, NULLIF(?, \'\'), NULLIF(?, \'\'), ?, NULLIF(?, \'\'), NULLIF(?, \'\'), NULLIF(?, \'\'))';
+    $sql = 'INSERT INTO officers (officer_id, full_name, nickname, address, nic, email, photo, designation, phone, issue_date, expiry_date, status) VALUES (?, ?, NULLIF(?, \'\'), NULLIF(?, \'\'), ?, NULLIF(?, \'\'), NULLIF(?, \'\'), ?, NULLIF(?, \'\'), NULLIF(?, \'\'), NULLIF(?, \'\'), ?)';
     $stmt = $conn->prepare($sql);
     if (!$stmt) throw new RuntimeException($conn->error);
-    $stmt->bind_param('sssssssssssss', $officerId, $category, $fullName, $nickname, $languages, $address, $nic, $email, $photoPath, $designation, $province, $issueDate, $expiryDate);
+    $stmt->bind_param('ssssssssssss', $officerId, $fullName, $nickname, $address, $nic, $email, $photoPath, $designation, $phone, $issueDate, $expiryDate, $status);
     if (!$stmt->execute()) throw new RuntimeException($stmt->error);
     $recordId = $conn->insert_id;
     if ($photoPath !== '') {

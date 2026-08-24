@@ -20,7 +20,7 @@ require_once __DIR__ . '/../config/database.php';
  <section class="records-card">
   <div class="action-bar"><div class="selection-summary"><span>Selection Summary</span><p><strong id="summaryCount">0</strong> / 15 records selected</p></div><div class="date-field"><label for="issueDate">Issued Date</label><input id="issueDate" type="date"></div><div class="date-field"><label for="expiryDate">Expiry Date</label><input id="expiryDate" type="date"></div><button id="printSelected" class="print-button" type="button" disabled><i class="fa-solid fa-print"></i> Print Selected (Max 15)</button></div>
   <div id="statusMessage" class="status-message" role="status" aria-live="polite"></div>
-  <div class="table-scroll"><table><thead><tr><th class="select-column"><button id="selectAll" type="button">Select</button></th><th>Guide ID</th><th>Full Name</th><th>Nick Name</th><th>NIC Number</th><th>Languages</th><th>Address</th></tr></thead><tbody id="guideRows"><tr><td colspan="7" class="table-state"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading guides...</td></tr></tbody></table></div>
+  <div class="table-scroll"><table><thead><tr><th class="select-column"><button id="selectAll" type="button">Select</button></th><th>Guide ID</th><th>Full Name</th><th>Nick Name</th><th>NIC Number</th><th>Address</th></tr></thead><tbody id="guideRows"><tr><td colspan="6" class="table-state"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading guides...</td></tr></tbody></table></div>
  </section>
 </main>
 <form id="printForm" action="bulk_print_sheet.php" method="post" target="_blank"><input type="hidden" name="officer_ids" id="printIds"><input type="hidden" name="issue_date" id="printIssueDate"><input type="hidden" name="expiry_date" id="printExpiryDate"></form>

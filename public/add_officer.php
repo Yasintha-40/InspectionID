@@ -1,9 +1,3 @@
-<?php
-require_once __DIR__ . '/../config/database.php';
-$provinces = [];
-$provinceResult = $conn->query('SELECT id, name FROM provinces WHERE is_active = 1 ORDER BY display_order, name');
-if ($provinceResult) $provinces = $provinceResult->fetch_all(MYSQLI_ASSOC);
-?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -31,15 +25,16 @@ if ($provinceResult) $provinces = $provinceResult->fetch_all(MYSQLI_ASSOC);
         <label>NIC number *<input name="nic" maxlength="30" required autocomplete="off"></label>
         <label>Email address<input name="email" type="email" maxlength="150" autocomplete="email"></label>
         <label>Nickname<input name="nickname" maxlength="100"></label>
-        <label>Province *
-          <select name="province_id" required>
-            <option value="">Select a province</option>
-            <?php foreach ($provinces as $province): ?>
-              <option value="<?= (int) $province['id'] ?>"><?= htmlspecialchars($province['name'], ENT_QUOTES, 'UTF-8') ?></option>
-            <?php endforeach; ?>
+        <label>Designation<input name="designation" maxlength="100" value="Inspection Officer"></label>
+        <label>Phone number<input name="phone" type="tel" maxlength="30" autocomplete="tel"></label>
+        <label>Status
+          <select name="status">
+            <option value="Active" selected>Active</option>
+            <option value="Inactive">Inactive</option>
+            <option value="Expired">Expired</option>
+            <option value="Suspended">Suspended</option>
           </select>
         </label>
-        <label>Designation<input name="designation" maxlength="100" value="Inspection Officer"></label>
         <label>Registration date<input name="issue_date" type="date"></label>
         <label>Expiry date<input name="expiry_date" type="date"></label>
         <label class="wide">Registered address<textarea name="address" rows="4"></textarea></label>

@@ -26,19 +26,24 @@ if ($query_result->num_rows > 0) {
     $result = [
         'id' => $row['id'],
         'officer_id' => $row['officer_id'],
-        'category' => $row['guide_category'] ?: 'National Guide',
         'NAME' => $row['full_name'],
+        'full_name' => $row['full_name'],
+        'nickname' => $row['nickname'] ?? '',
         'qr' => $row['qr_code'],
+        'qr_url' => !empty($row['qr_code']) ? 'qr_image.php?id=' . rawurlencode((string) $row['id']) : '',
         'ADD' => $row['address'],
         'NIC' => $row['nic'],
         'EMAIL' => $row['email'],
+        'email' => $row['email'] ?? '',
         'photo' => $row['photo'],
         'photo_url' => 'officer_photo.php?id=' . rawurlencode((string) $row['id']),
         'designation' => $row['designation'],
-        'province' => $row['province'] ?: 'Western',
-        'issue_date' => $row['issue_date'] ?: date('Y-m-d'),
-        'expiry_date' => $row['expiry_date'] ?: date('Y-m-d', strtotime('+3 years')),
-        'status' => $row['status']
+        'phone' => $row['phone'] ?? '',
+        'issue_date' => $row['issue_date'] ?? '',
+        'expiry_date' => $row['expiry_date'] ?? '',
+        'status' => $row['status'],
+        'created_at' => $row['created_at'],
+        'updated_at' => $row['updated_at']
     ];
     echo json_encode(['success' => true, 'officer' => $result]);
 } else {

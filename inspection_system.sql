@@ -141,6 +141,8 @@ CREATE TABLE `officer_audit_log` (
   `officer_id` int(11) DEFAULT NULL,
   `action` enum('insert','update','delete') NOT NULL,
   `actor` varchar(150) NOT NULL DEFAULT 'system',
+  `ip_address` varchar(45) DEFAULT NULL,
+  `user_agent` varchar(500) DEFAULT NULL,
   `old_values` longtext DEFAULT NULL,
   `new_values` longtext DEFAULT NULL,
   `occurred_at` datetime(6) NOT NULL DEFAULT current_timestamp(6),
@@ -159,7 +161,7 @@ CREATE TABLE `officer_audit_log` (
 
 LOCK TABLES `officer_audit_log` WRITE;
 /*!40000 ALTER TABLE `officer_audit_log` DISABLE KEYS */;
-INSERT INTO `officer_audit_log` VALUES (1,1,'update','root@localhost','{\"full_name\": \"Ms. A.L.A.P. Umashani\", \"nic\": \"199881900934\", \"email\": \"probodika.umashani@ucr.ac.lk\", \"status\": \"\", \"issue_date\": \"2026-08-21\", \"expiry_date\": \"2029-08-21\"}','{\"full_name\": \"Ms. A.L.A.P. Umashani\", \"nic\": \"199881900934\", \"email\": \"probodika.umashani@ucr.ac.lk\", \"status\": \"Active\", \"issue_date\": \"2026-08-21\", \"expiry_date\": \"2029-08-21\"}','2026-08-21 14:09:47.870182');
+INSERT INTO `officer_audit_log` VALUES (1,1,'update','root@localhost',NULL,NULL,'{\"full_name\": \"Ms. A.L.A.P. Umashani\", \"nic\": \"199881900934\", \"email\": \"probodika.umashani@ucr.ac.lk\", \"status\": \"\", \"issue_date\": \"2026-08-21\", \"expiry_date\": \"2029-08-21\"}','{\"full_name\": \"Ms. A.L.A.P. Umashani\", \"nic\": \"199881900934\", \"email\": \"probodika.umashani@ucr.ac.lk\", \"status\": \"Active\", \"issue_date\": \"2026-08-21\", \"expiry_date\": \"2029-08-21\"}','2026-08-21 14:09:47.870182');
 /*!40000 ALTER TABLE `officer_audit_log` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -214,10 +216,8 @@ DROP TABLE IF EXISTS `officers`;
 CREATE TABLE `officers` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `officer_id` varchar(20) NOT NULL,
-  `guide_category` varchar(60) NOT NULL DEFAULT 'National Guide',
   `full_name` varchar(255) NOT NULL,
   `nickname` varchar(100) DEFAULT NULL,
-  `languages` varchar(255) DEFAULT NULL,
   `address` text DEFAULT NULL,
   `nic` varchar(30) DEFAULT NULL,
   `nic_normalized` varchar(30) GENERATED ALWAYS AS (nullif(ucase(replace(replace(trim(`nic`),' ',''),'-','')),'')) STORED,
@@ -225,9 +225,6 @@ CREATE TABLE `officers` (
   `photo` varchar(255) DEFAULT NULL,
   `qr_code` varchar(255) DEFAULT NULL,
   `designation` varchar(100) DEFAULT 'Inspection Officer',
-  `department` varchar(150) DEFAULT NULL,
-  `province` varchar(100) DEFAULT NULL,
-  `district` varchar(100) DEFAULT NULL,
   `phone` varchar(30) DEFAULT NULL,
   `issue_date` date DEFAULT NULL,
   `expiry_date` date DEFAULT NULL,
@@ -252,7 +249,7 @@ CREATE TABLE `officers` (
 
 LOCK TABLES `officers` WRITE;
 /*!40000 ALTER TABLE `officers` DISABLE KEYS */;
-INSERT INTO `officers` VALUES (1,'INS-0001','National Guide','Ms. A.L.A.P. Umashani',NULL,NULL,'B/19/A, Railway Quarters, Ratmalana.','199881900934','199881900934','probodika.umashani@ucr.ac.lk','D:\\PHOTOS\\A L A P Umashani - Probodika Umashani.jpg','D:\\PHOTOS\\Ms. A.L.A.P. Umashani QR.jpg','Inspection Officer',NULL,NULL,NULL,NULL,'2026-08-21','2029-08-21','Active',1,'2026-08-21 03:57:54','2026-08-21 14:09:47.870182',NULL),(2,'INS-0002','National Guide','Mr. C.H. De Saram',NULL,NULL,'72, De Saram Place, Yakkala Road, Gampaha','560091907V','560091907V','chrisdesaram@gmail.com','D:\\PHOTOS\\Chris de Saram.jpg','D:\\PHOTOS\\Mr. C.H. De Saram QR.jpg','Inspection Officer',NULL,NULL,NULL,NULL,NULL,NULL,'Active',1,'2026-08-21 03:57:54','2026-08-21 14:08:48.498350',NULL),(3,'INS-0003','National Guide','Mr. M.S. Gamunu Srilal',NULL,NULL,'11/1B,1 st Ln,Raphael Thennakoon Mw,Parakandeniya,Imbulgoda',NULL,NULL,'gamunusrilal@gmail.com','D:\\PHOTOS\\Gamunu Portrait AI - Gamunu Srilal.jpg','D:\\PHOTOS\\Mr. M.S. Gamunu Srilal QR.jpg','Inspection Officer',NULL,NULL,NULL,NULL,NULL,NULL,'Active',1,'2026-08-21 03:57:54','2026-08-21 14:08:48.498350',NULL),(4,'INS-0004','National Guide','Ms. Priyanthika Wijenaika',NULL,NULL,'No. 134, W. A. silva Mawatha, Wellawatte, Colombo 06.','556971943v','556971943V','wijenaikepriyanthika15@gmail.com','D:\\PHOTOS\\PP Wijenaike.jpg','D:\\PHOTOS\\Ms. Priyanthika Wijenaika QR.jpg','Inspection Officer',NULL,NULL,NULL,NULL,NULL,NULL,'Active',1,'2026-08-21 03:57:54','2026-08-21 14:08:48.498350',NULL),(5,'INS-0005','National Guide','Mr. Nuwan Chamara',NULL,NULL,'No 144/A, Maddumage Watta, Gangodawila, Nugegoda.','802953976V','802953976V','chamichamara1980@gmail.com','D:\\PHOTOS\\Nuwan Chamara Senanayake.jpg',NULL,'Inspection Officer',NULL,NULL,NULL,NULL,NULL,NULL,'Active',1,'2026-08-21 03:57:54','2026-08-21 14:08:48.498350',NULL),(6,'INS-0006','National Guide','Ms. Namashiwayam Gishila',NULL,NULL,'Peace Haven, Adisham Road, Haputale','846854533V','846854533V','gishilashivam1984@gmail.com','D:\\PHOTOS\\N GISHILA.jpg','D:\\PHOTOS\\Ms. Namashiwayam Gishila QR.jpg','Inspection Officer',NULL,NULL,NULL,NULL,NULL,NULL,'Active',1,'2026-08-21 03:57:54','2026-08-21 14:08:48.498350',NULL),(7,'INS-0007','National Guide','Mr. Gihan Wijesuriya',NULL,NULL,'No 11,\"Pinibindu Uyana\",Nilwakka,Kegalle','902261230V','902261230V','gihanwijesuriya90@gmail.com','D:\\PHOTOS\\W.A.G.Wijesuriya - Gihan.jpg','D:\\PHOTOS\\Mr. Gihan Wijesuriya QR.jpg','Inspection Officer',NULL,NULL,NULL,NULL,NULL,NULL,'Active',1,'2026-08-21 03:57:54','2026-08-21 14:08:48.498350',NULL),(8,'INS-0008','National Guide','Mr. Rohana Bandara',NULL,NULL,'Sri Lanka Institute Of Tourism and Hotel Management , Golf Link Road , Bandarawela','770100801v','770100801V','bandaraw@slithm.edu.lk',NULL,NULL,'Inspection Officer',NULL,NULL,NULL,NULL,NULL,NULL,'Active',1,'2026-08-21 03:57:54','2026-08-21 14:08:48.498350',NULL),(9,'INS-0009','National Guide','Mr. Upul Atapattu',NULL,NULL,'264/28, Namal Uyana, Thambiligasmulla Road, Kiribathgoda.','570033948v','570033948V','uattapattu@gmail.com','D:\\PHOTOS\\UPUL ATHAPATHTHU .jpg','D:\\PHOTOS\\Mr. Upul Atapattu QR.jpg','Inspection Officer',NULL,NULL,NULL,NULL,NULL,NULL,'Active',1,'2026-08-21 03:57:54','2026-08-21 14:08:48.498350',NULL),(10,'INS-0010','National Guide','Mr. Ravindra Senavirathne',NULL,NULL,'No 330 Siyambalagoda Danture','812730517V','812730517V','ravindras@slithm.edu.lk',NULL,NULL,'Inspection Officer',NULL,'Western',NULL,NULL,'2026-08-21','2029-08-21','Active',1,'2026-08-21 03:57:54','2026-08-21 14:08:48.498350',NULL),(11,'INS-0011','National Guide','Mr. Roshan Fernando',NULL,NULL,'6/3 , St Rita’s road , Mt Lavinia','561162433v','561162433V','kfrfdo@gmail.com','D:\\PHOTOS\\Roshan Fernando.jpg','D:\\PHOTOS\\Mr. Roshan Fernando QR.jpg','Inspection Officer',NULL,NULL,NULL,NULL,NULL,NULL,'Active',1,'2026-08-21 03:57:54','2026-08-21 14:08:48.498350',NULL),(12,'INS-0012','National Guide','Ms. W. A . I. Madupani Gunasekara',NULL,NULL,'3 C, 107, NATIONAL HOUSING SCHEME, MATTEGODA','867830103v','867830103V','indrachapa.tourism@gmail.com','D:\\PHOTOS\\W.A.I.M.Gunasekara - Indrachapa Gunasekara.jpg','D:\\PHOTOS\\Ms. W. A . I. Madupani Gunasekara QR.jpg','Inspection Officer',NULL,NULL,NULL,NULL,NULL,NULL,'Active',1,'2026-08-21 03:57:54','2026-08-21 14:08:48.498350',NULL),(13,'INS-0013','National Guide','Mr. Sujith De Silva',NULL,NULL,'No.5/1, De Mel Road, Katubedda','672331250V','672331250V','sujithdesilva29@gmail.com','D:\\PHOTOS\\SUJITH MERVIN.jpg','D:\\PHOTOS\\Mr. Sujith De Silva QR.jpg','Inspection Officer',NULL,NULL,NULL,NULL,NULL,NULL,'Active',1,'2026-08-21 03:57:54','2026-08-21 14:08:48.498350',NULL),(14,'INS-0014','National Guide','Ms. Gangani Marasinghe',NULL,NULL,'No. 197/5, Dudly Senanayaka Mawatha,Negambo road, Nittambuwa','937761716V','937761716V','gangani325@gmail.com','D:\\PHOTOS\\M.M.G.K Marasinghe - gangani marasinghe.jpg','D:\\PHOTOS\\Ms. Gangani Marasinghe QR.jpg','Inspection Officer',NULL,NULL,NULL,NULL,NULL,NULL,'Active',1,'2026-08-21 03:57:54','2026-08-21 14:08:48.498350',NULL);
+INSERT INTO `officers` VALUES (1,'INS-0001','Ms. A.L.A.P. Umashani',NULL,'B/19/A, Railway Quarters, Ratmalana.','199881900934','199881900934','probodika.umashani@ucr.ac.lk','D:\\PHOTOS\\A L A P Umashani - Probodika Umashani.jpg','D:\\PHOTOS\\Ms. A.L.A.P. Umashani QR.jpg','Inspection Officer',NULL,'2026-08-21','2029-08-21','Active',1,'2026-08-21 03:57:54','2026-08-21 14:09:47.870182',NULL),(2,'INS-0002','Mr. C.H. De Saram',NULL,'72, De Saram Place, Yakkala Road, Gampaha','560091907V','560091907V','chrisdesaram@gmail.com','D:\\PHOTOS\\Chris de Saram.jpg','D:\\PHOTOS\\Mr. C.H. De Saram QR.jpg','Inspection Officer',NULL,NULL,NULL,'Active',1,'2026-08-21 03:57:54','2026-08-21 14:08:48.498350',NULL),(3,'INS-0003','Mr. M.S. Gamunu Srilal',NULL,'11/1B,1 st Ln,Raphael Thennakoon Mw,Parakandeniya,Imbulgoda',NULL,NULL,'gamunusrilal@gmail.com','D:\\PHOTOS\\Gamunu Portrait AI - Gamunu Srilal.jpg','D:\\PHOTOS\\Mr. M.S. Gamunu Srilal QR.jpg','Inspection Officer',NULL,NULL,NULL,'Active',1,'2026-08-21 03:57:54','2026-08-21 14:08:48.498350',NULL),(4,'INS-0004','Ms. Priyanthika Wijenaika',NULL,'No. 134, W. A. silva Mawatha, Wellawatte, Colombo 06.','556971943v','556971943V','wijenaikepriyanthika15@gmail.com','D:\\PHOTOS\\PP Wijenaike.jpg','D:\\PHOTOS\\Ms. Priyanthika Wijenaika QR.jpg','Inspection Officer',NULL,NULL,NULL,'Active',1,'2026-08-21 03:57:54','2026-08-21 14:08:48.498350',NULL),(5,'INS-0005','Mr. Nuwan Chamara',NULL,'No 144/A, Maddumage Watta, Gangodawila, Nugegoda.','802953976V','802953976V','chamichamara1980@gmail.com','D:\\PHOTOS\\Nuwan Chamara Senanayake.jpg',NULL,'Inspection Officer',NULL,NULL,NULL,'Active',1,'2026-08-21 03:57:54','2026-08-21 14:08:48.498350',NULL),(6,'INS-0006','Ms. Namashiwayam Gishila',NULL,'Peace Haven, Adisham Road, Haputale','846854533V','846854533V','gishilashivam1984@gmail.com','D:\\PHOTOS\\N GISHILA.jpg','D:\\PHOTOS\\Ms. Namashiwayam Gishila QR.jpg','Inspection Officer',NULL,NULL,NULL,'Active',1,'2026-08-21 03:57:54','2026-08-21 14:08:48.498350',NULL),(7,'INS-0007','Mr. Gihan Wijesuriya',NULL,'No 11,\"Pinibindu Uyana\",Nilwakka,Kegalle','902261230V','902261230V','gihanwijesuriya90@gmail.com','D:\\PHOTOS\\W.A.G.Wijesuriya - Gihan.jpg','D:\\PHOTOS\\Mr. Gihan Wijesuriya QR.jpg','Inspection Officer',NULL,NULL,NULL,'Active',1,'2026-08-21 03:57:54','2026-08-21 14:08:48.498350',NULL),(8,'INS-0008','Mr. Rohana Bandara',NULL,'Sri Lanka Institute Of Tourism and Hotel Management , Golf Link Road , Bandarawela','770100801v','770100801V','bandaraw@slithm.edu.lk',NULL,NULL,'Inspection Officer',NULL,NULL,NULL,'Active',1,'2026-08-21 03:57:54','2026-08-21 14:08:48.498350',NULL),(9,'INS-0009','Mr. Upul Atapattu',NULL,'264/28, Namal Uyana, Thambiligasmulla Road, Kiribathgoda.','570033948v','570033948V','uattapattu@gmail.com','D:\\PHOTOS\\UPUL ATHAPATHTHU .jpg','D:\\PHOTOS\\Mr. Upul Atapattu QR.jpg','Inspection Officer',NULL,NULL,NULL,'Active',1,'2026-08-21 03:57:54','2026-08-21 14:08:48.498350',NULL),(10,'INS-0010','Mr. Ravindra Senavirathne',NULL,'No 330 Siyambalagoda Danture','812730517V','812730517V','ravindras@slithm.edu.lk',NULL,NULL,'Inspection Officer',NULL,'2026-08-21','2029-08-21','Active',1,'2026-08-21 03:57:54','2026-08-21 14:08:48.498350',NULL),(11,'INS-0011','Mr. Roshan Fernando',NULL,'6/3 , St Rita’s road , Mt Lavinia','561162433v','561162433V','kfrfdo@gmail.com','D:\\PHOTOS\\Roshan Fernando.jpg','D:\\PHOTOS\\Mr. Roshan Fernando QR.jpg','Inspection Officer',NULL,NULL,NULL,'Active',1,'2026-08-21 03:57:54','2026-08-21 14:08:48.498350',NULL),(12,'INS-0012','Ms. W. A . I. Madupani Gunasekara',NULL,'3 C, 107, NATIONAL HOUSING SCHEME, MATTEGODA','867830103v','867830103V','indrachapa.tourism@gmail.com','D:\\PHOTOS\\W.A.I.M.Gunasekara - Indrachapa Gunasekara.jpg','D:\\PHOTOS\\Ms. W. A . I. Madupani Gunasekara QR.jpg','Inspection Officer',NULL,NULL,NULL,'Active',1,'2026-08-21 03:57:54','2026-08-21 14:08:48.498350',NULL),(13,'INS-0013','Mr. Sujith De Silva',NULL,'No.5/1, De Mel Road, Katubedda','672331250V','672331250V','sujithdesilva29@gmail.com','D:\\PHOTOS\\SUJITH MERVIN.jpg','D:\\PHOTOS\\Mr. Sujith De Silva QR.jpg','Inspection Officer',NULL,NULL,NULL,'Active',1,'2026-08-21 03:57:54','2026-08-21 14:08:48.498350',NULL),(14,'INS-0014','Ms. Gangani Marasinghe',NULL,'No. 197/5, Dudly Senanayaka Mawatha,Negambo road, Nittambuwa','937761716V','937761716V','gangani325@gmail.com','D:\\PHOTOS\\M.M.G.K Marasinghe - gangani marasinghe.jpg','D:\\PHOTOS\\Ms. Gangani Marasinghe QR.jpg','Inspection Officer',NULL,NULL,NULL,'Active',1,'2026-08-21 03:57:54','2026-08-21 14:08:48.498350',NULL);
 /*!40000 ALTER TABLE `officers` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
@@ -267,10 +264,13 @@ DELIMITER ;;
 /*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER trg_officers_after_insert
 AFTER INSERT ON officers FOR EACH ROW
 BEGIN
-    INSERT INTO officer_audit_log (officer_id, action, actor, new_values)
-    VALUES (NEW.id, 'insert', CURRENT_USER(), JSON_OBJECT(
-        'officer_id', NEW.officer_id, 'full_name', NEW.full_name,
-        'nic', NEW.nic, 'email', NEW.email, 'status', NEW.status
+    INSERT INTO officer_audit_log (officer_id, action, actor, ip_address, user_agent, new_values)
+    VALUES (NEW.id, 'insert', COALESCE(@audit_actor, CURRENT_USER()), @audit_ip, @audit_user_agent, JSON_OBJECT(
+        'officer_id', NEW.officer_id, 'full_name', NEW.full_name, 'nickname', NEW.nickname,
+        'address', NEW.address, 'nic', NEW.nic, 'email', NEW.email, 'photo', NEW.photo,
+        'qr_code', NEW.qr_code, 'designation', NEW.designation, 'phone', NEW.phone,
+        'issue_date', NEW.issue_date, 'expiry_date', NEW.expiry_date, 'status', NEW.status,
+        'deleted_at', NEW.deleted_at
     ));
 END */;;
 DELIMITER ;
@@ -290,12 +290,18 @@ DELIMITER ;;
 /*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER trg_officers_after_update
 AFTER UPDATE ON officers FOR EACH ROW
 BEGIN
-    INSERT INTO officer_audit_log (officer_id, action, actor, old_values, new_values)
-    VALUES (NEW.id, 'update', CURRENT_USER(),
-        JSON_OBJECT('full_name', OLD.full_name, 'nic', OLD.nic, 'email', OLD.email,
-                    'status', OLD.status, 'issue_date', OLD.issue_date, 'expiry_date', OLD.expiry_date),
-        JSON_OBJECT('full_name', NEW.full_name, 'nic', NEW.nic, 'email', NEW.email,
-                    'status', NEW.status, 'issue_date', NEW.issue_date, 'expiry_date', NEW.expiry_date)
+    INSERT INTO officer_audit_log (officer_id, action, actor, ip_address, user_agent, old_values, new_values)
+    VALUES (NEW.id, 'update', COALESCE(@audit_actor, CURRENT_USER()), @audit_ip, @audit_user_agent,
+        JSON_OBJECT('officer_id', OLD.officer_id, 'full_name', OLD.full_name, 'nickname', OLD.nickname,
+                    'address', OLD.address, 'nic', OLD.nic, 'email', OLD.email, 'photo', OLD.photo,
+                    'qr_code', OLD.qr_code, 'designation', OLD.designation, 'phone', OLD.phone,
+                    'issue_date', OLD.issue_date, 'expiry_date', OLD.expiry_date, 'status', OLD.status,
+                    'deleted_at', OLD.deleted_at),
+        JSON_OBJECT('officer_id', NEW.officer_id, 'full_name', NEW.full_name, 'nickname', NEW.nickname,
+                    'address', NEW.address, 'nic', NEW.nic, 'email', NEW.email, 'photo', NEW.photo,
+                    'qr_code', NEW.qr_code, 'designation', NEW.designation, 'phone', NEW.phone,
+                    'issue_date', NEW.issue_date, 'expiry_date', NEW.expiry_date, 'status', NEW.status,
+                    'deleted_at', NEW.deleted_at)
     );
 END */;;
 DELIMITER ;
@@ -315,10 +321,13 @@ DELIMITER ;;
 /*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER trg_officers_after_delete
 AFTER DELETE ON officers FOR EACH ROW
 BEGIN
-    INSERT INTO officer_audit_log (officer_id, action, actor, old_values)
-    VALUES (NULL, 'delete', CURRENT_USER(), JSON_OBJECT(
-        'id', OLD.id, 'officer_id', OLD.officer_id, 'full_name', OLD.full_name,
-        'nic', OLD.nic, 'email', OLD.email, 'status', OLD.status
+    INSERT INTO officer_audit_log (officer_id, action, actor, ip_address, user_agent, old_values)
+    VALUES (NULL, 'delete', COALESCE(@audit_actor, CURRENT_USER()), @audit_ip, @audit_user_agent, JSON_OBJECT(
+        'id', OLD.id, 'officer_id', OLD.officer_id, 'full_name', OLD.full_name, 'nickname', OLD.nickname,
+        'address', OLD.address, 'nic', OLD.nic, 'email', OLD.email, 'photo', OLD.photo,
+        'qr_code', OLD.qr_code, 'designation', OLD.designation, 'phone', OLD.phone,
+        'issue_date', OLD.issue_date, 'expiry_date', OLD.expiry_date, 'status', OLD.status,
+        'deleted_at', OLD.deleted_at
     ));
 END */;;
 DELIMITER ;
@@ -326,45 +335,6 @@ DELIMITER ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
 /*!50003 SET character_set_results = @saved_cs_results */ ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
-
---
--- Table structure for table `provinces`
---
-
-DROP TABLE IF EXISTS `provinces`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `provinces` (
-  `id` smallint(5) unsigned NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) NOT NULL,
-  `display_order` tinyint(3) unsigned NOT NULL DEFAULT 0,
-  `is_active` tinyint(1) NOT NULL DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` datetime(6) NOT NULL DEFAULT current_timestamp(6) ON UPDATE current_timestamp(6),
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uq_provinces_name` (`name`),
-  KEY `ix_provinces_active_order` (`is_active`,`display_order`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `provinces`
---
-
-LOCK TABLES `provinces` WRITE;
-/*!40000 ALTER TABLE `provinces` DISABLE KEYS */;
-INSERT INTO `provinces` VALUES
-(1,'Western',1,1,'2026-08-21 14:35:15','2026-08-21 14:35:15.521946'),
-(2,'Central',2,1,'2026-08-21 14:35:15','2026-08-21 14:35:15.521946'),
-(3,'Southern',3,1,'2026-08-21 14:35:15','2026-08-21 14:35:15.521946'),
-(4,'Northern',4,1,'2026-08-21 14:35:15','2026-08-21 14:35:15.521946'),
-(5,'Eastern',5,1,'2026-08-21 14:35:15','2026-08-21 14:35:15.521946'),
-(6,'North Western',6,1,'2026-08-21 14:35:15','2026-08-21 14:35:15.521946'),
-(7,'North Central',7,1,'2026-08-21 14:35:15','2026-08-21 14:35:15.521946'),
-(8,'Uva',8,1,'2026-08-21 14:35:15','2026-08-21 14:35:15.521946'),
-(9,'Sabaragamuwa',9,1,'2026-08-21 14:35:15','2026-08-21 14:35:15.521946');
-/*!40000 ALTER TABLE `provinces` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `schema_migrations`
@@ -389,7 +359,7 @@ LOCK TABLES `schema_migrations` WRITE;
 /*!40000 ALTER TABLE `schema_migrations` DISABLE KEYS */;
 INSERT INTO `schema_migrations` VALUES
 ('2026-08-21-001','Production schema, normalized print items, card history, audit trail and indexes','2026-08-21 14:08:48.798503'),
-('2026-08-21-002','Add database-managed Sri Lankan provinces','2026-08-21 14:35:15.525684');
+('2026-08-24-003','Capture request IP, user agent and actor in officer audit log','2026-08-24 00:00:00.000000');
 /*!40000 ALTER TABLE `schema_migrations` ENABLE KEYS */;
 UNLOCK TABLES;
 

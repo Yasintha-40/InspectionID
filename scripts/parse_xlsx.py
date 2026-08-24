@@ -21,11 +21,15 @@ HEADER_ALIASES = {
     "photo file path": "photo",
     "qr": "qr_code",
     "qr file path": "qr_code",
-    "category": "guide_category",
-    "guide category": "guide_category",
     "nickname": "nickname",
     "nick name": "nickname",
-    "languages": "languages",
+    "designation": "designation",
+    "phone": "phone",
+    "phone number": "phone",
+    "issue date": "issue_date",
+    "registration date": "issue_date",
+    "expiry date": "expiry_date",
+    "status": "status",
 }
 
 
@@ -67,9 +71,9 @@ def main(path):
         record["row_number"] = row_number
         record.setdefault("photo", "")
         record.setdefault("qr_code", "")
-        record.setdefault("guide_category", "National Guide")
         record.setdefault("nickname", "")
-        record.setdefault("languages", "English")
+        for field in ("designation", "phone", "issue_date", "expiry_date", "status"):
+            record.setdefault(field, "")
         output.append(record)
 
     print(json.dumps({"sheet": sheet.title, "records": output}, ensure_ascii=False))

@@ -1,71 +1,46 @@
 <?php
-// public/update_officer.php
-require_once '../config/database.php';
-header('Content-Type: application/json');
+require_once __DIR__ . '/../config/database.php';
+header('Content-Type: application/json; charset=utf-8');
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['success' => false, 'message' => 'Method not allowed.']);
-    exit;
-}
+function respond(array $data, int $status = 200): void { http_response_code($status); echo json_encode($data, JSON_UNESCAPED_UNICODE); exit; }
+function valid_date(string $date): bool { $parsed = DateTime::createFromFormat('!Y-m-d', $date); return $parsed !== false && $parsed->format('Y-m-d') === $date; }
+
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') respond(['success' => false, 'message' => 'Method not allowed.'], 405);
 
 $id = filter_var($_POST['id'] ?? null, FILTER_VALIDATE_INT);
-$fullName = trim($_POST['full_name'] ?? '');
-$nic = strtoupper(preg_replace('/[\s-]+/', '', trim($_POST['nic'] ?? '')));
-$province = trim($_POST['province'] ?? '');
-$designation = trim($_POST['designation'] ?? '');
-$address = trim($_POST['address'] ?? '');
-$issueDate = trim($_POST['issue_date'] ?? '');
-$expiryDate = trim($_POST['expiry_date'] ?? '');
+$fullName = trim((string) ($_POST['full_name'] ?? ''));
+$nickname = trim((string) ($_POST['nickname'] ?? ''));
+$nic = strtoupper(preg_replace('/[\s-]+/', '', trim((string) ($_POST['nic'] ?? ''))));
+$email = strtolower(trim((string) ($_POST['email'] ?? '')));
+$designation = trim((string) ($_POST['designation'] ?? '')) ?: 'Inspection Officer';
+$phone = trim((string) ($_POST['phone'] ?? ''));
+$address = trim((string) ($_POST['address'] ?? ''));
+$issueDate = trim((string) ($_POST['issue_date'] ?? ''));
+$expiryDate = trim((string) ($_POST['expiry_date'] ?? ''));
+$status = trim((string) ($_POST['status'] ?? 'Active'));
 
-function valid_date(string $date): bool
-{
-    $parsed = DateTime::createFromFormat('Y-m-d', $date);
-    return $parsed !== false && $parsed->format('Y-m-d') === $date;
-}
+if (!$id || $fullName === '' || $nic === '') respond(['success' => false, 'message' => 'Name and NIC are required.'], 422);
+if (!preg_match('/^[A-Z0-9]+$/', $nic)) respond(['success' => false, 'message' => 'NIC may contain only letters and numbers.'], 422);
+if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) respond(['success' => false, 'message' => 'Enter a valid email address.'], 422);
+if (!in_array($status, ['Active', 'Inactive', 'Expired', 'Suspended'], true)) respond(['success' => false, 'message' => 'Select a valid status.'], 422);
+if (($issueDate === '') !== ($expiryDate === '')) respond(['success' => false, 'message' => 'Provide both registration and expiry dates, or leave both empty.'], 422);
+if ($issueDate !== '' && (!valid_date($issueDate) || !valid_date($expiryDate) || $expiryDate <= $issueDate)) respond(['success' => false, 'message' => 'Expiry date must be after the registration date.'], 422);
 
-if (!$id || $fullName === '' || $nic === '' || !valid_date($issueDate) || !valid_date($expiryDate)) {
-    http_response_code(422);
-    echo json_encode(['success' => false, 'message' => 'Name, NIC, and valid dates are required.']);
-    exit;
-}
-
-if ($expiryDate <= $issueDate) {
-    http_response_code(422);
-    echo json_encode(['success' => false, 'message' => 'Expiry date must be after the registration date.']);
-    exit;
-}
-
-$duplicate = $conn->prepare("SELECT id FROM officers WHERE nic_normalized = ? AND id <> ? LIMIT 1");
-$duplicate->bind_param('si', $nic, $id);
+$duplicate = $conn->prepare("SELECT id FROM officers WHERE deleted_at IS NULL AND id <> ? AND (nic_normalized = ? OR (? <> '' AND LOWER(email) = ?)) LIMIT 1");
+if (!$duplicate) respond(['success' => false, 'message' => 'The officer record could not be validated.'], 500);
+$duplicate->bind_param('isss', $id, $nic, $email, $email);
 $duplicate->execute();
-if ($duplicate->get_result()->num_rows > 0) {
-    http_response_code(409);
-    echo json_encode(['success' => false, 'message' => 'Another officer already uses this NIC number.']);
-    exit;
-}
+if ($duplicate->get_result()->num_rows > 0) respond(['success' => false, 'message' => 'Another officer already uses this NIC or email address.'], 409);
 $duplicate->close();
 
-$sql = 'UPDATE officers SET full_name = ?, nic = ?, province = ?, designation = ?, address = ?, issue_date = ?, expiry_date = ?, row_version = row_version + 1 WHERE id = ?';
+$sql = "UPDATE officers SET full_name=?, nickname=NULLIF(?, ''), address=NULLIF(?, ''), nic=?, email=NULLIF(?, ''), designation=?, phone=NULLIF(?, ''), issue_date=NULLIF(?, ''), expiry_date=NULLIF(?, ''), status=?, row_version=row_version+1 WHERE id=? AND deleted_at IS NULL";
 $stmt = $conn->prepare($sql);
-$stmt->bind_param('sssssssi', $fullName, $nic, $province, $designation, $address, $issueDate, $expiryDate, $id);
-
-if (!$stmt->execute()) {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'The record could not be updated.']);
-    exit;
-}
-
+if (!$stmt) respond(['success' => false, 'message' => 'The update could not be prepared.'], 500);
+$stmt->bind_param('ssssssssssi', $fullName, $nickname, $address, $nic, $email, $designation, $phone, $issueDate, $expiryDate, $status, $id);
+if (!$stmt->execute()) respond(['success' => false, 'message' => 'The record could not be updated.'], 500);
 if ($stmt->affected_rows === 0) {
-    $exists = $conn->prepare('SELECT id FROM officers WHERE id = ?');
-    $exists->bind_param('i', $id);
-    $exists->execute();
-    if ($exists->get_result()->num_rows === 0) {
-        http_response_code(404);
-        echo json_encode(['success' => false, 'message' => 'Officer record not found.']);
-        exit;
-    }
+    $exists = $conn->prepare('SELECT id FROM officers WHERE id = ? AND deleted_at IS NULL');
+    $exists->bind_param('i', $id); $exists->execute();
+    if ($exists->get_result()->num_rows === 0) respond(['success' => false, 'message' => 'Officer record not found.'], 404);
 }
-
-echo json_encode(['success' => true, 'message' => 'Officer record updated successfully.']);
-?>
+respond(['success' => true, 'message' => 'Officer record updated successfully.']);
