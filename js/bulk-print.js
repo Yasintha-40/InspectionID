@@ -21,6 +21,7 @@ function updateSelection() {
   const count = state.selected.size;
   $("selectedMetric").textContent = count;
   $("summaryCount").textContent = count;
+  $("saveSelected").disabled = count === 0;
   $("printSelected").disabled = count === 0;
   document.querySelectorAll(".guide-checkbox").forEach((input) => {
     input.checked = state.selected.has(Number(input.value));
@@ -98,19 +99,48 @@ $("selectAll").addEventListener("click", () => {
   updateSelection();
 });
 $("loadGuides").addEventListener("click", loadGuides);
+function selectedDates() {
+  const issue = $("issueDate").value;
+  const expiry = $("expiryDate").value;
+  if (!issue || !expiry) {
+    showMessage("Choose both the issued date and expiry date before saving.", "error");
+    return null;
+  }
+  if (expiry <= issue) {
+    showMessage("The expiry date must be after the issued date.", "error");
+    return null;
+  }
+  return { issue, expiry };
+}
+$("saveSelected").addEventListener("click", async () => {
+  const dates = selectedDates();
+  if (!dates || !state.selected.size) return;
+  const button = $("saveSelected");
+  button.disabled = true;
+  button.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Saving';
+  showMessage("Saving dates and generating missing QR codes...", "info");
+  try {
+    const body = new FormData();
+    body.append("officer_ids", [...state.selected].join(","));
+    body.append("issue_date", dates.issue);
+    body.append("expiry_date", dates.expiry);
+    const response = await fetch("bulk_save_api.php", { method: "POST", body });
+    const data = await response.json();
+    if (!response.ok || !data.success)
+      throw new Error(data.message || "Unable to save the selected guides.");
+    showMessage(data.message, "success");
+    await loadGuides();
+  } catch (error) {
+    showMessage(error.message || "Unable to save the selected guides.", "error");
+  } finally {
+    button.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save & Generate QR';
+    button.disabled = state.selected.size === 0;
+  }
+});
 $("printSelected").addEventListener("click", () => {
-  const issue = $("issueDate").value,
-    expiry = $("expiryDate").value;
-  if (!issue || !expiry)
-    return showMessage(
-      "Choose both the issued date and expiry date before printing.",
-      "error",
-    );
-  if (expiry <= issue)
-    return showMessage(
-      "The expiry date must be after the issued date.",
-      "error",
-    );
+  const dates = selectedDates();
+  if (!dates) return;
+  const { issue, expiry } = dates;
   $("printIds").value = [...state.selected].join(",");
   $("printIssueDate").value = issue;
   $("printExpiryDate").value = expiry;

@@ -16,6 +16,7 @@ try {
     $updateParams = array_merge([$issue, $expiry], $ids);
     $update->bind_param($updateTypes, ...$updateParams);
     $update->execute();
+    
 
     $idList = implode(',', $ids); // Retained for compatibility with existing reports.
     $count = count($ids);
