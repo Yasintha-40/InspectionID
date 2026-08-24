@@ -15,6 +15,8 @@ body {
   color: var(--ink);
   font-family: Inter, Arial, sans-serif;
 }
+button,a,input,select { -webkit-tap-highlight-color: transparent; }
+:focus-visible { outline: 3px solid rgba(255,213,0,.55); outline-offset: 2px; }
 .bulk-hero {
   min-height: 124px;
   background: var(--navy);
@@ -384,4 +386,9 @@ tbody tr.is-selected {
   .records-card {
     border-radius: 20px;
   }
+  .table-scroll { position: relative; }
+  .table-scroll::after { content: "Swipe to view all columns \2192"; position: sticky; left: 12px; bottom: 10px; display: inline-block; margin: 10px 12px; padding: 6px 10px; border-radius: 20px; background: rgba(23,35,60,.88); color: #fff; font-size: 11px; pointer-events: none; }
+  .selection-summary { max-width: none; }
+  .date-field input, .print-button { width: 100%; min-height: 50px; }
 }
+@media (max-width: 420px) { .bulk-hero { padding: 16px 12px; gap: 20px; } .hero-title-group { gap: 10px; } .hero-title-group h1 { font-size: 19px; } .hero-title-group p { font-size: 12px; line-height: 1.5; } .back-button { width: 44px; min-width: 44px; height: 44px; } .page-shell { padding: 16px 8px 36px; } .metric-grid { grid-template-columns: 1fr 1fr; gap: 8px; } .metric-card { min-height: 94px; padding: 16px; border-radius: 14px; } .metric-card:last-child { grid-column: 1 / -1; } .metric-card strong { font-size: 27px; } .action-bar { padding: 14px 12px; } .records-card { border-radius: 14px; } }
