@@ -220,7 +220,6 @@ $result = false;
             return path.split('\\').pop().split('/').pop();
         }
 
-<<<<<<< Updated upstream
         const photoUploadInput = document.getElementById('photoUploadInput');
         const profilePhotoUpload = document.getElementById('profilePhotoUpload');
         const photoUploadProgress = document.getElementById('photoUploadProgress');
@@ -295,7 +294,6 @@ $result = false;
                     photoUploadInput.value = '';
                 });
         });
-=======
         function setCardName(fullName) {
             const cardName = document.getElementById('cardName');
             cardName.innerText = fullName || '';
@@ -306,7 +304,6 @@ $result = false;
                 cardName.style.fontSize = `${fontSize}px`;
             }
         }
->>>>>>> Stashed changes
 
         document.getElementById('searchForm').addEventListener('submit', function(e) {
             e.preventDefault();
