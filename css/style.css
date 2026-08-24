@@ -516,10 +516,14 @@ textarea.editable-field {
 .template-card-photo {
     position: absolute;
     left: 27.9%;
-    top: 33%;
+    top: 32.27%;
     width: 44.2%;
     height: 23.5%;
+    display: block;
+    box-sizing: border-box;
     object-fit: cover;
+    border: 1px solid #263440;
+    border-radius: 0;
     z-index: 2;
 }
 
